@@ -5,7 +5,7 @@
 2. Rename the repo to your "<>.github.io" (e.g: my main is etasin16 so i named it etasin16.github.io  
 3. If you dont have your domain Just 'delete' the CNAME file or If you has your own domain. Just go to CNAME file and chenge my Domain to your.
 4. Then go to index.html and Chenge everything to your info, e.g: Change eyery 'Eaftada Tasin Eafti' to your name and edit all the info to your.
-5. To chenge the picture delete 'Tasin.jpg' file, then upload your file 'example.jpg', Find 'Tasin.jpg' in the indix file and edit it to 'example.jpg' as you uploaded.
+5. To chenge the picture delete 'Tasin.jpg' file, then upload your file 'example.jpg', Find 'Tasin.jpg' in the indix file and edit it to 'example.jpg' as you uploaded. Do same on "favicon.png"
 
 # Wallah! You got your own portfolio website.
 
