@@ -1,411 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6417620135310519" crossorigin="anonymous"></script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="Eaftada Tasin Eafti — Geology & Mining student, geospatial tools builder, and radio astronomy hobbyist." />
-<link rel="icon" type="image/png" href="favicon.png" />
-<title>Eaftada Tasin Eafti — Geology, Geospatial Tools & Radio Astronomy</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#ece4d4;
-    --surface:#f8f4ea;
-    --ink:#2a2417;
-    --ink-soft:#5a5240;
-    --line:#d9cfb8;
-    --oxide:#a1481e;
-    --oxide-soft:#c98a5c;
-    --verdigris:#3f6b57;
-    --verdigris-soft:#8fada0;
-    --clay:#8a6a3d;
-    --slate-blue:#4a6483;
-    --plum:#7a4d63;
-    --muted:#9a8f74;
-  }
-
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-
-  body{
-    font-family:'Inter',sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-  }
-
-  ::selection{background:var(--oxide);color:var(--surface);}
-
-  a{color:var(--oxide);text-decoration:none;transition:color .2s ease;}
-  a:hover{color:var(--verdigris);}
-  a:focus-visible, button:focus-visible{outline:2px solid var(--verdigris);outline-offset:3px;}
-
-  .mono{font-family:'IBM Plex Mono', monospace;letter-spacing:.04em;}
-  .wrap{max-width:920px;margin:0 auto;padding:0 28px;}
-
-  .rail{
-    position:fixed;
-    top:0; left:0; bottom:0;
-    width:38px;
-    display:none;
-    flex-direction:column;
-    border-right:1px solid var(--line);
-    z-index:20;
-    background:var(--paper);
-  }
-  .rail-band{
-    flex:1;
-    position:relative;
-    border-bottom:1px solid var(--line);
-    display:block;
-    opacity:.55;
-    transition:opacity .25s ease, background .25s ease;
-  }
-  .rail-band span{
-    position:absolute;
-    left:50%; top:50%;
-    transform:translate(-50%,-50%) rotate(180deg);
-    writing-mode:vertical-rl;
-    font-size:.62rem;
-    color:var(--ink-soft);
-    letter-spacing:.12em;
-  }
-  .rail-band:hover{opacity:.85;}
-  .rail-band.active{opacity:1;}
-  .rail-band.active span{color:var(--ink);font-weight:500;}
-
-  @media(min-width:980px){
-    .rail{display:flex;}
-    body{padding-left:38px;}
-  }
-
-  header{
-    position:relative;
-    padding:88px 0 64px;
-    overflow:hidden;
-    border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, var(--paper) 0%, #e4dabf 100%);
-  }
-  .strata-bg{position:absolute;inset:0;opacity:.6;pointer-events:none;}
-
-  .hero-inner{
-    position:relative;
-    display:grid;
-    grid-template-columns:auto 1fr;
-    gap:36px;
-    align-items:center;
-  }
-
-  .hero-photo{
-    width:132px;height:132px;
-    border-radius:6px;
-    object-fit:cover;
-    border:1px solid var(--line);
-    box-shadow:0 12px 26px rgba(42,36,23,.18);
-  }
-
-  .eyebrow{font-size:.72rem;color:var(--verdigris);text-transform:uppercase;margin-bottom:14px;}
-
-  h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:clamp(2.1rem, 5vw, 3.1rem);
-    letter-spacing:-.01em;
-    color:var(--ink);
-  }
-
-  .role-line{margin-top:14px;color:var(--ink-soft);font-size:1.02rem;max-width:56ch;}
-  .role-line .sep{color:var(--muted);padding:0 8px;}
-
-  @media(max-width:640px){
-    .hero-inner{grid-template-columns:1fr;text-align:left;}
-    header{padding:64px 0 48px;}
-  }
-
-  section{padding:56px 0;border-bottom:1px solid var(--line);}
-  section:last-of-type{border-bottom:none;}
-
-  .stratum{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
-  .stratum-swatch{width:22px;height:10px;border-radius:2px;flex-shrink:0;}
-  .stratum-label{font-size:.72rem;text-transform:uppercase;color:var(--muted);}
-  h2{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:1.5rem;
-    font-weight:600;
-    color:var(--ink);
-    margin-top:2px;
-  }
-
-  #about    .stratum-swatch{background:var(--oxide);}
-  #research .stratum-swatch{background:var(--verdigris);}
-  #projects .stratum-swatch{background:var(--clay);}
-  #skills   .stratum-swatch{background:var(--slate-blue);}
-  #outreach .stratum-swatch{background:var(--plum);}
-  #contact  .stratum-swatch{background:var(--oxide-soft);}
-
-  .lede{color:var(--ink-soft);max-width:70ch;font-size:1.02rem;}
-
-  .card{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:24px;
-    margin-top:18px;
-    box-shadow:0 1px 2px rgba(42,36,23,.04);
-    opacity:0;
-    transform:translateY(14px);
-    transition:opacity .5s ease, transform .5s ease;
-  }
-  .card.in-view{opacity:1;transform:translateY(0);}
-
-  .card h3{font-family:'Space Grotesk',sans-serif;font-size:1.08rem;font-weight:600;color:var(--ink);margin-bottom:8px;}
-  .card p{color:var(--ink-soft);font-size:.96rem;}
-
-  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  .card-grid .card{margin-top:0;}
-  @media(max-width:700px){.card-grid{grid-template-columns:1fr;}}
-
-  .launch-button{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    margin-top:14px;
-    padding:9px 16px;
-    border:1px solid var(--oxide-soft);
-    border-radius:6px;
-    color:var(--oxide);
-    font-size:.9rem;
-    font-weight:500;
-  }
-  .launch-button:hover{background:var(--oxide);color:var(--surface);border-color:var(--oxide);}
-
-  .status{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.68rem;
-    padding:3px 9px;
-    border-radius:20px;
-    margin-bottom:10px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-  }
-  .status.live{background:rgba(63,107,87,.12);color:var(--verdigris);border:1px solid rgba(63,107,87,.35);}
-  .status.waking{background:rgba(138,106,61,.13);color:var(--clay);border:1px solid rgba(138,106,61,.35);}
-  .status.offline{background:rgba(161,72,30,.1);color:var(--oxide);border:1px solid rgba(161,72,30,.3);}
-  .status .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
-
-  .skill-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:18px;}
-  .skill-row .card p b{color:var(--ink);}
-
-  #contact ul{list-style:none;}
-  #contact li{margin-bottom:10px;font-size:.98rem;}
-  #contact li span{color:var(--muted);display:inline-block;width:84px;}
-
-  footer{text-align:center;padding:32px 0 48px;color:var(--muted);font-size:.8rem;}
-
-  @media (prefers-reduced-motion: reduce){
-    html{scroll-behavior:auto;}
-    .card{opacity:1;transform:none;transition:none;}
-  }
-</style>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6417620135310519"
+     crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Eaftada Tasin Eafti Portfolio" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <title>Eaftada Tasin Eafti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    header {
+      background: #1e293b;
+      color: white;
+      padding: 30px 20px;
+      border-radius: 12px;
+    }
+    header h1 { font-size: 2rem; }
+    header p { margin-top: 5px; font-size: 1.1rem; }
+    section { margin-top: 40px; }
+    h2 { margin-bottom: 10px; color: #1e293b; }
+    ul { list-style: none; padding-left: 0; }
+    li { margin-bottom: 10px; }
+    a { color: #3b82f6; text-decoration: none; }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
-
-  <nav class="rail" aria-label="Section navigation">
-    <a class="rail-band" data-target="about" href="#about" style="background:rgba(161,72,30,.10)"><span>ABOUT</span></a>
-    <a class="rail-band" data-target="research" href="#research" style="background:rgba(63,107,87,.10)"><span>RESEARCH</span></a>
-    <a class="rail-band" data-target="projects" href="#projects" style="background:rgba(138,106,61,.12)"><span>PROJECTS</span></a>
-    <a class="rail-band" data-target="skills" href="#skills" style="background:rgba(74,100,131,.10)"><span>SKILLS</span></a>
-    <a class="rail-band" data-target="outreach" href="#outreach" style="background:rgba(122,77,99,.10)"><span>OUTREACH</span></a>
-    <a class="rail-band" data-target="contact" href="#contact" style="background:rgba(201,138,92,.12)"><span>CONTACT</span></a>
-  </nav>
-
   <header>
-    <svg class="strata-bg" viewBox="0 0 920 260" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,220 C 200,200 300,240 460,215 C 620,190 750,225 920,205 L920,260 L0,260 Z" fill="#e4dabf"/>
-      <path d="M0,190 C 220,215 320,175 480,195 C 640,215 780,180 920,200 L920,260 L0,260 Z" fill="#ddd0b2" opacity=".8"/>
-    </svg>
-    <div class="wrap hero-inner">
-      <img class="hero-photo" src="1000031502 (1).jpg" alt="Portrait of Eaftada Tasin Eafti">
-      <div>
-        <div class="eyebrow mono">Geology & Mining · University of Barishal</div>
-        <h1>Eaftada Tasin Eafti</h1>
-        <p class="role-line">Regional Volunteer at Durbin <span class="sep">/</span> IT Coordinator at UBGS <span class="sep">/</span> Former IT Manager at TLC</p>
-      </div>
-    </div>
+    <h1>Eaftada Tasin Eafti</h1>
+     <!-- Change "1000031502 (1).jpg" instead of "Tasin.jpg" -->
+    <img src="1000031502 (1).jpg" alt="Eaftada Tasin Eafti"
+       style="width: 150px; height: 150px;  border-radius: 8px; border: 4px solid white; margin-top: 10px;">
+    <p>Regional Volunteer at Durbin | IT Coordinator at UBGS | Former IT Manager at TLC | "Geology and Mining" Student at University of Barishal</p>
   </header>
 
-  <main class="wrap">
+  <section>
+    <h2>About Me</h2>
+    <div class="card">
+      <p>I am a 3rd-year BSc student in Geology and Mining at the University of Barishal, Bangladesh, with research interests in geomorphology, hydrogeochemistry, and the application of geospatial tools to earth science problems.
+During my undergraduate studies I contributed to two peer-reviewed publications indexed on ScienceDirect one examining geomorphic index alterations in a coastal river system in Bangladesh, and another on hydrogeochemical characterisation of groundwater in coastal Bangladesh. My contributions involved geospatial figure preparation and graphical data visualisation, for which I was acknowledged by name in both papers. Being involved in active research teams at this stage has given me direct exposure to how field data translates into published scientific work.
+Alongside my academic work I built and operated a radio astronomy telescope that successfully detected the 21cm Hydrogen Line emission of the Milky Way an independent project spanning hardware construction, signal processing, and observational data interpretation. I have also developed several open-access geoscience tools including a QFL Ternary Diagram Builder and Lithora, a web application for geochemical index calculations and data visualisation, built in Python.
+I work with ArcGIS for spatial analysis and GIS mapping, and Python for data processing and application development. I serve as IT Coordinator at the University of Barishal Geological Society and as a Regional Volunteer at Durbin, an astronomical society focused on public science outreach and community engagement.</p>
+    </div>
+  </section>
 
-    <section id="about">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 01</span>
-      </div>
-      <h2>About</h2>
-      <div class="card">
-        <p>I'm a 3rd-year BSc student in Geology and Mining at the University of Barishal, Bangladesh, with research interests in geomorphology, hydrogeology, and the application of geospatial tools to earth science problems.</p>
-        <p style="margin-top:14px;">During my undergraduate studies I contributed to two peer-reviewed publications indexed on ScienceDirect — one examining geomorphic index alterations in a coastal river system in Bangladesh, and another on hydrogeochemical characterisation of groundwater in coastal Bangladesh. My contributions involved geospatial figure preparation and graphical data visualisation, for which I was acknowledged by name in both papers. Working inside active research teams at this stage has given me a direct look at how field data becomes published scientific work.</p>
-        <p style="margin-top:14px;">Alongside my academic work, I built and operated a radio astronomy telescope that successfully detected the 21 cm Hydrogen Line emission of the Milky Way — an independent project spanning hardware construction, signal processing, and observational data interpretation. I've also developed several open-access geoscience tools, including a QFL Ternary Diagram Builder and Lithora, a web application for geochemical index calculations and data visualisation, built in Python.</p>
-        <p style="margin-top:14px;">I work with ArcGIS for spatial analysis and GIS mapping, and Python for data processing and application development — most recently learning PyVista and GemPy for 3D geological modelling and visualisation. I serve as IT Coordinator at the University of Barishal Geological Society and as a Regional Volunteer at Durbin, an astronomical society focused on public science outreach and community engagement.</p>
-      </div>
-    </section>
-
-    <section id="research">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 02</span>
-      </div>
-      <h2>Research Contributions</h2>
-      <p class="lede">Acknowledged by name in two peer-reviewed publications indexed on ScienceDirect, for data visualisation and figure preparation during undergraduate research.</p>
-
-      <div class="card">
-        <h3>Geomorphic index alterations and socioeconomic implications: a case study of a coastal river system in Bangladesh</h3>
-        <p>Contributed geospatial figures and graphical outputs used in the analysis.</p>
-        <a href="https://www.sciencedirect.com/science/article/pii/S259006172500047X" target="_blank" class="launch-button">📚 View publication</a>
-      </div>
-
-      <div class="card">
-        <h3>Hydrogeochemical characterization and quality assessment of groundwater resources in Amtali Upazila, Barguna: a study of coastal Bangladesh</h3>
-        <p>Contributed graphical data visualisation supporting the hydrogeochemical analysis.</p>
-        <a href="https://www.sciencedirect.com/science/article/pii/S2451912X2500025X" target="_blank" class="launch-button">📚 View publication</a>
-      </div>
-    </section>
-
-    <section id="projects">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 03</span>
-      </div>
-      <h2>Projects</h2>
-
-      <div class="card">
-        <h3>Radio Astronomy Telescope</h3>
-        <p>A self-built radio telescope that detected the 21 cm Hydrogen Line of the Milky Way — spanning hardware construction, signal processing, and data interpretation.</p>
-        <a href="https://thedailycampus.com/public-university/215873?fbclid=IwdGRjcAMfqQljbGNrAx-pBGV4dG4DYWVtAjExAAEeUp1uaeeg_4SW98PNNdTbdOYEaenXUGKEJX5Y6VjuGuMfiLfOrwcE5k4VDgo_aem_rU0QS1zD_Yq4P7zVODcSAw" target="_blank" class="launch-button">📡 Media coverage</a>
-      </div>
-
-      <div class="card-grid" style="margin-top:18px;">
+    <section>
+    <h2>Research Contributions</h2>
         <div class="card">
-          <span class="status offline"><span class="dot"></span>Currently offline</span>
-          <h3>QFL Ternary Builder</h3>
-          <p>A tool for creating QFL ternary diagrams, built with Anvil and Python. Its free-tier hosting has been retired, so the live link is currently down.</p>
-          <a href="https://shy-worthy-grass.anvil.app/" target="_blank" class="launch-button">🚀 Visit anyway</a>
+        <p>I have been acknowledged by name in two peer-reviewed publications indexed on ScienceDirect, for contributions to data visualisation and figure preparation during my undergraduate studies.</p>
+    <div class="card">
+       <h3>1. Geomorphic index alterations and socioeconomic implications: A case study of a Coastal River system in Bangladesh</h3>
+      <p> My contribution involved the preparation of geospatial figures and graphical outputs used in the analysis. </p>
+       <a href="https://www.sciencedirect.com/science/article/pii/S259006172500047X" target="_blank" class="launch-button"> 📚 View publication </a>
+    </div>
+    <div class="card"> 
+       <h3>2. Hydrogeochemical characterization and quality assessment of groundwater resources in Amtali Upazila, Barguna: A study of coastal Bangladesh</h3>
+      <p> My contribution involved graphical data visualisation supporting the hydrogeochemical analysis. </p>
+       <a href="https://www.sciencedirect.com/science/article/pii/S2451912X2500025X" target="_blank" class="launch-button"> 📚 View publication </a>
+    </div>
         </div>
-        <div class="card">
-          <span class="status waking"><span class="dot"></span>Live — slow first load</span>
-          <h3>Lithora Geoscience Toolkit</h3>
-          <p>A Streamlit app for building complex geochemical plots. It's live, but sits on a free tier — the first load after a while asleep can take 20–30 seconds to spin up.</p>
-          <a href="https://lithora.streamlit.app/" target="_blank" class="launch-button">🚀 Launch app</a>
-        </div>
-      </div>
+  </section>
+   
+  <section>
+  <h2>Projects</h2>
+   <div class="card">
+     <h3>Radio Astronomy Telescope</h3>
+    <p>Successfully detected the 21 cm Hydrogen Line of the Milky way. </p>
+     <a href="https://thedailycampus.com/public-university/215873?fbclid=IwdGRjcAMfqQljbGNrAx-pBGV4dG4DYWVtAjExAAEeUp1uaeeg_4SW98PNNdTbdOYEaenXUGKEJX5Y6VjuGuMfiLfOrwcE5k4VDgo_aem_rU0QS1zD_Yq4P7zVODcSAw" target="_blank" class="launch-button">📡  Media coverage </a>
+  </div>
+  <div class="card">
+    <h3>QFL Ternary Builder</h3>
+    <p>An online tool for creating QFL ternary diagrams. Made with Anvil and python.</p>
+    <a href="https://shy-worthy-grass.anvil.app/" target="_blank" class="launch-button">🚀 Launch App</a>
+  </div>
+  <div class="card">
+     <h3>Lithora Geoscience Toolkit</h3>
+    <p> Streamlit based webapp that helps to creat complex plotiog. </p>
+     <a href="https://lithora.streamlit.app/" target="_blank" class="launch-button">🚀 Launch App</a>
+  </div>
+     <div class="card">
+     <h3>Litholab website</h3>
+    <p>A web app that can create Chemical Index of Aultaration (CIA), Rainfall plotting and much more. Check it.. </p>
+     <a href="https://litholab.xyz/" target="_blank" class="launch-button">🚀 Launch App</a>
+  </div>
+</section>
 
+  <section>
+    <h2>Skills</h2>
+    <div class="card">
+      <h3>Geospatial & Scientific Computing</h3>
+       <div class="card">
+          <p>
+             <b>ArcGIS :</b> spatial analysis, GIS mapping, geospatial figure preparation. <br>
+             <b>Python :</b> data processing, visualisation, web application development. <br>
+             <b>Geostatistics :</b> quantitative data analysis applied to geological datasets.
+          </p> 
+       </div>
+       <h3>Scientific Visualisation & Design</h3>
+       <div class="card">
+          <p>
+             <b>Photoshop :</b> scientific figure editing and poster design. <br>
+             <b>Python :</b> Advance matplotlib and seaborn for graph, plot, and chart. <br>
+             <b>Adobe Animate :</b> Basic Animation, science communication and outreach content.
+          </p>
+       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Outreach, Events & Community Work</h2>
+    <div class="card">
       <div class="card">
-        <span class="status offline"><span class="dot"></span>Currently offline</span>
-        <h3>Litholab</h3>
-        <p>A web app for building the Chemical Index of Alteration (CIA), rainfall plotting, and more. Temporarily down.</p>
-        <a href="https://litholab.xyz/" target="_blank" class="launch-button">🚀 Visit anyway</a>
-      </div>
-    </section>
+         <h3>Planetary Parade Observation Camp</h3>
+          <p>
+             As Durbin's regional volunteer, conducted public telescope outreach sessions in collaboration with Barishal University Physics Club, teaching local students to operate Unistellar and reflecting mirror telescopes.
+             Sessions included live observation and imaging of the Orion Nebula, Jupiter, the four Galilean moons, Mars and Saturn bringing hands-on astronomy education to non-specialist audiences.
+          </p>
+       </div>
+       <div class="card">
+         <h3>Zoom the Earth 2.0</h3>
+          <p>
+            Arranged by UBGS, YouthMappers BU, and EAGE-BU.
+provided IT support, designed promotional materials, and coordinated logistics on event day for this multi-organisational geoscience outreach programme.
+             YouthMappers BU is affiliated with the international YouthMappers network.
+          </p>
+       </div>
+         <div class="card">
+         <h3>Geology Night 2023</h3>
+          <p>
+            Annul cultural Programme of Department of Geology and Mining, University of Barishal
+Managed technical production, stage lighting, audio-visual systems, and live media operation ensuring seamless performance delivery for the event.
+          </p>
+       </div>
+    </div>
+  </section>
 
-    <section id="skills">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 04</span>
-      </div>
-      <h2>Skills</h2>
-
-      <div class="skill-row">
-        <div class="card">
-          <h3>Geospatial & Scientific Computing</h3>
-          <p><b>ArcGIS</b> — spatial analysis, GIS mapping, geospatial figure preparation.<br><br><b>Python</b> — data processing, visualisation, web application development.<br><br><b>Geostatistics</b> — quantitative analysis applied to geological datasets.</p>
-        </div>
-        <div class="card">
-          <h3>3D Geological Modelling</h3>
-          <p><b>GemPy</b> — implicit 3D structural geological modelling.<br><br><b>PyVista</b> — 3D scientific visualisation and mesh analysis in Python.</p>
-        </div>
-        <div class="card">
-          <h3>Scientific Visualisation & Design</h3>
-          <p><b>Photoshop</b> — scientific figure editing and poster design.<br><br><b>Python</b> — Matplotlib and Seaborn for graphs, plots, and charts.<br><br><b>Adobe Animate</b> — basic animation for science communication and outreach content.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="outreach">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 05</span>
-      </div>
-      <h2>Outreach, Events & Community Work</h2>
-
-      <div class="card">
-        <h3>Planetary Parade Observation Camp</h3>
-        <p>As Durbin's regional volunteer, ran public telescope outreach sessions with the Barishal University Physics Club, teaching local students to operate Unistellar and reflecting-mirror telescopes. Sessions included live observation and imaging of the Orion Nebula, Jupiter and its four Galilean moons, Mars, and Saturn — bringing hands-on astronomy to non-specialist audiences.</p>
-      </div>
-
-      <div class="card">
-        <h3>Zoom the Earth 2.0</h3>
-        <p>Arranged by UBGS, YouthMappers BU, and EAGE-BU. Provided IT support, designed promotional materials, and coordinated event-day logistics for this multi-organisational geoscience outreach programme. YouthMappers BU is affiliated with the international YouthMappers network.</p>
-      </div>
-
-      <div class="card">
-        <h3>Geology Night 2023</h3>
-        <p>Annual cultural programme of the Department of Geology and Mining, University of Barishal. Managed technical production, stage lighting, audio-visual systems, and live media operation for the event.</p>
-      </div>
-    </section>
-
-    <section id="contact">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 06</span>
-      </div>
-      <h2>Contact</h2>
-      <div class="card">
-        <ul>
-          <li><span>Email</span><a href="mailto:e.tasin02@gmail.com">e.tasin02@gmail.com</a></li>
-          <li><span>LinkedIn</span><a href="https://www.linkedin.com/in/eaftada-tasin-eafti-566ba528b/" target="_blank">View profile</a></li>
-          <li><span>GitHub</span><a href="https://github.com/Etasin16" target="_blank">Etasin16</a></li>
-        </ul>
-      </div>
-    </section>
-
-  </main>
-
-  <footer>Built by Eaftada Tasin Eafti — Barishal, Bangladesh</footer>
-
-  <script>
-    var cards = document.querySelectorAll('.card');
-    var cardObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(entry.isIntersecting){
-          entry.target.classList.add('in-view');
-          cardObserver.unobserve(entry.target);
-        }
-      });
-    }, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
-    cards.forEach(function(c){cardObserver.observe(c);});
-
-    var bands = document.querySelectorAll('.rail-band');
-    var sections = document.querySelectorAll('main section');
-    var sectionObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        var id = entry.target.id;
-        var band = document.querySelector('.rail-band[data-target="'+id+'"]');
-        if(!band) return;
-        if(entry.isIntersecting){
-          bands.forEach(function(b){b.classList.remove('active');});
-          band.classList.add('active');
-        }
-      });
-    }, {threshold:.35});
-    sections.forEach(function(s){sectionObserver.observe(s);});
-  </script>
-
+  <section>
+    <h2>Contact</h2>
+    <div class="card">
+      <ul>
+        <li>Email: <a href="mailto:e.tasin02@gmail.com">e.tasin02@gmail.com</a></li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/eaftada-tasin-eafti-566ba528b/" target="_blank">View Profile</a></li>
+        <li>GitHub: <a href="https://github.com/Etasin16" target="_blank">Etasin16</a></li>
+        
+      </ul>
+    </div>
+  </section>
 </body>
 </html>
