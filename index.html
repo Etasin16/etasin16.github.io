@@ -1,411 +1,756 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6417620135310519" crossorigin="anonymous"></script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="Eaftada Tasin Eafti — Geology & Mining student, geospatial tools builder, and radio astronomy hobbyist." />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="favicon.png" />
-<title>Eaftada Tasin Eafti — Geology, Geospatial Tools & Radio Astronomy</title>
+<title>Eaftada Tasin Eafti — Geoscience Tools</title>
+<meta name="description" content="Open, in-browser tools for structural geology, mineralogy, geochemistry, hydrology, and planetary science.">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
 <style>
-  :root{
-    --paper:#ece4d4;
-    --surface:#f8f4ea;
-    --ink:#2a2417;
-    --ink-soft:#5a5240;
-    --line:#d9cfb8;
-    --oxide:#a1481e;
-    --oxide-soft:#c98a5c;
-    --verdigris:#3f6b57;
-    --verdigris-soft:#8fada0;
-    --clay:#8a6a3d;
-    --slate-blue:#4a6483;
-    --plum:#7a4d63;
-    --muted:#9a8f74;
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --basalt:       #14120F;
+  --basalt-2:     #1C1914;
+  --basalt-3:     #221E17;
+  --limestone:    #EDE6D6;
+  --limestone-70: rgba(237,230,214,0.7);
+  --limestone-45: rgba(237,230,214,0.45);
+  --hairline:     rgba(237,230,214,0.12);
+  --hairline-str: rgba(237,230,214,0.22);
+
+  --rust:      #C06736;
+  --rust-dim:  #7A4224;
+  --malachite: #5C9683;
+  --ochre:     #D9B23C;
+  --slate:     #7A8FA6;
+
+  --display: 'Zilla Slab', Georgia, serif;
+  --body:    'Public Sans', -apple-system, sans-serif;
+  --mono:    'IBM Plex Mono', 'Courier New', monospace;
+
+  --max: 1180px;
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  background:var(--basalt);
+  color:var(--limestone);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{ font-family:var(--display); margin:0; color:var(--limestone); }
+p{ margin:0; }
+a{ color:inherit; }
+button{ font-family:inherit; }
+::selection{ background:var(--rust); color:var(--basalt); }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:3px; }
+
+.eyebrow{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--limestone-45);
+}
+.wrap{ max-width:var(--max); margin:0 auto; padding:0 32px; }
+
+@media (max-width:640px){ .wrap{ padding:0 20px; } }
+
+/* ============================================================
+   CORE-LOG STRIP  (signature element)
+   fixed vertical ruler that changes lithology pattern per section
+   ============================================================ */
+.core-strip{
+  position:fixed;
+  left:0; top:0; bottom:0;
+  width:56px;
+  z-index:40;
+  border-right:1px solid var(--hairline);
+  background-color:var(--basalt-2);
+  transition:background-image .6s ease, border-color .6s ease;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:88px 0 24px;
+}
+.core-strip__depth{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--limestone-45);
+  margin-top:auto;
+  padding-bottom:6px;
+}
+.core-strip__unit{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--limestone-45);
+  opacity:.8;
+}
+
+/* lithology backgrounds, swapped via data-section */
+.core-strip[data-section="hero"]{
+  background-image:repeating-linear-gradient(135deg, rgba(192,103,54,.35) 0 2px, transparent 2px 12px);
+  border-color:rgba(192,103,54,.35);
+}
+.core-strip[data-section="tools"]{
+  background-image:radial-gradient(rgba(217,178,60,.4) 1.2px, transparent 1.6px);
+  background-size:11px 11px;
+  border-color:rgba(217,178,60,.35);
+}
+.core-strip[data-section="planetary"]{
+  background-image:radial-gradient(rgba(122,143,166,.55) .9px, transparent 1.2px);
+  background-size:7px 16px;
+  border-color:rgba(122,143,166,.35);
+}
+.core-strip[data-section="about"]{
+  background-image:repeating-linear-gradient(0deg, rgba(92,150,131,.4) 0 1.5px, transparent 1.5px 9px);
+  border-color:rgba(92,150,131,.35);
+}
+
+@media (max-width:820px){
+  .core-strip{ width:9px; padding:0; }
+  .core-strip__depth,.core-strip__unit{ display:none; }
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.site-header{
+  position:fixed; top:0; left:56px; right:0; z-index:50;
+  background:rgba(20,18,15,.86);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--hairline);
+}
+@media (max-width:820px){ .site-header{ left:9px; } }
+
+.site-header__inner{
+  max-width:var(--max);
+  margin:0 auto;
+  padding:0 32px;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+}
+.brand{
+  font-family:var(--display);
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:.01em;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.brand span{ color:var(--rust); }
+
+.nav{ display:flex; align-items:center; gap:28px; }
+.nav a{
+  font-family:var(--mono);
+  font-size:12.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  text-decoration:none;
+  color:var(--limestone-70);
+  transition:color .2s ease;
+}
+.nav a:hover{ color:var(--ochre); }
+
+.depth-readout{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--limestone-45);
+  white-space:nowrap;
+  padding-left:20px;
+  border-left:1px solid var(--hairline);
+}
+.depth-readout b{ color:var(--ochre); font-weight:500; }
+
+.nav-toggle{
+  display:none;
+  background:none; border:1px solid var(--hairline-str); border-radius:4px;
+  color:var(--limestone); width:36px; height:36px; cursor:pointer;
+  font-family:var(--mono); font-size:16px;
+}
+@media (max-width:760px){
+  .nav{
+    position:absolute; top:64px; left:0; right:0;
+    background:var(--basalt-2);
+    border-bottom:1px solid var(--hairline);
+    flex-direction:column; align-items:flex-start; gap:0;
+    max-height:0; overflow:hidden; transition:max-height .3s ease;
   }
+  .nav.open{ max-height:320px; }
+  .nav a{ width:100%; padding:14px 24px; border-bottom:1px solid var(--hairline); }
+  .depth-readout{ display:none; }
+  .nav-toggle{ display:block; }
+}
 
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  position:relative;
+  margin-left:56px;
+  padding:168px 0 120px;
+  overflow:hidden;
+}
+@media (max-width:820px){ .hero{ margin-left:9px; } }
 
-  body{
-    font-family:'Inter',sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-  }
+.hero__strata{
+  position:absolute; inset:0; z-index:0; opacity:.55;
+  animation:driftStrata 26s ease-in-out infinite;
+}
+@keyframes driftStrata{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-14px); }
+}
+@media (prefers-reduced-motion:reduce){ .hero__strata{ animation:none; } }
 
-  ::selection{background:var(--oxide);color:var(--surface);}
+.hero__content{ position:relative; z-index:1; max-width:760px; }
+.hero h1{
+  font-size:clamp(38px,5.4vw,64px);
+  font-weight:700;
+  line-height:1.06;
+  letter-spacing:-.01em;
+  margin:18px 0 22px;
+}
+.hero h1 em{ font-style:normal; color:var(--rust); }
+.hero p.lede{
+  font-size:18px;
+  color:var(--limestone-70);
+  max-width:560px;
+  margin-bottom:36px;
+}
+.hero__cta{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:64px; }
 
-  a{color:var(--oxide);text-decoration:none;transition:color .2s ease;}
-  a:hover{color:var(--verdigris);}
-  a:focus-visible, button:focus-visible{outline:2px solid var(--verdigris);outline-offset:3px;}
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--mono); font-size:13px; letter-spacing:.04em;
+  padding:13px 22px; border-radius:5px; text-decoration:none;
+  border:1px solid var(--hairline-str);
+  transition:border-color .2s ease, background .2s ease, transform .15s ease;
+}
+.btn:hover{ transform:translateY(-1px); }
+.btn--primary{ background:var(--rust); border-color:var(--rust); color:var(--basalt); font-weight:500; }
+.btn--primary:hover{ background:#D3763F; }
+.btn--ghost{ color:var(--limestone); }
+.btn--ghost:hover{ border-color:var(--ochre); color:var(--ochre); }
 
-  .mono{font-family:'IBM Plex Mono', monospace;letter-spacing:.04em;}
-  .wrap{max-width:920px;margin:0 auto;padding:0 28px;}
+/* rotating geologic-principle ticker */
+.ticker{
+  border-top:1px solid var(--hairline);
+  border-bottom:1px solid var(--hairline);
+  padding:18px 0;
+  max-width:640px;
+  position:relative;
+  min-height:56px;
+}
+.ticker__item{
+  position:absolute; inset:18px 0 auto 0;
+  opacity:0; transform:translateY(6px);
+  transition:opacity .6s ease, transform .6s ease;
+  font-size:14px;
+}
+.ticker__item.is-active{ opacity:1; transform:translateY(0); position:relative; }
+.ticker__item b{
+  font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ochre); display:block; margin-bottom:4px;
+}
+.ticker__item span{ color:var(--limestone-70); }
 
-  .rail{
-    position:fixed;
-    top:0; left:0; bottom:0;
-    width:38px;
-    display:none;
-    flex-direction:column;
-    border-right:1px solid var(--line);
-    z-index:20;
-    background:var(--paper);
-  }
-  .rail-band{
-    flex:1;
-    position:relative;
-    border-bottom:1px solid var(--line);
-    display:block;
-    opacity:.55;
-    transition:opacity .25s ease, background .25s ease;
-  }
-  .rail-band span{
-    position:absolute;
-    left:50%; top:50%;
-    transform:translate(-50%,-50%) rotate(180deg);
-    writing-mode:vertical-rl;
-    font-size:.62rem;
-    color:var(--ink-soft);
-    letter-spacing:.12em;
-  }
-  .rail-band:hover{opacity:.85;}
-  .rail-band.active{opacity:1;}
-  .rail-band.active span{color:var(--ink);font-weight:500;}
+/* ============================================================
+   SECTION SCAFFOLDING
+   ============================================================ */
+.section{
+  margin-left:56px;
+  padding:88px 0;
+  border-top:1px solid var(--hairline);
+  position:relative;
+}
+@media (max-width:820px){ .section{ margin-left:9px; } }
 
-  @media(min-width:980px){
-    .rail{display:flex;}
-    body{padding-left:38px;}
-  }
+.section__head{
+  display:flex; justify-content:space-between; align-items:flex-end;
+  gap:24px; margin-bottom:48px; flex-wrap:wrap;
+}
+.section__head h2{ font-size:clamp(28px,3.4vw,40px); margin-top:8px; }
+.section__range{ font-family:var(--mono); font-size:13px; color:var(--limestone-45); text-align:right; }
 
-  header{
-    position:relative;
-    padding:88px 0 64px;
-    overflow:hidden;
-    border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, var(--paper) 0%, #e4dabf 100%);
-  }
-  .strata-bg{position:absolute;inset:0;opacity:.6;pointer-events:none;}
+/* ============================================================
+   TOOLBOX
+   ============================================================ */
+.discipline{ margin-bottom:56px; }
+.discipline:last-child{ margin-bottom:0; }
+.discipline__head{
+  display:flex; align-items:baseline; gap:14px; margin-bottom:20px;
+  padding-bottom:10px; border-bottom:1px solid var(--hairline);
+}
+.discipline__head h3{ font-size:21px; font-weight:600; }
+.discipline__count{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
 
-  .hero-inner{
-    position:relative;
-    display:grid;
-    grid-template-columns:auto 1fr;
-    gap:36px;
-    align-items:center;
-  }
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(240px,1fr));
+  gap:14px;
+}
+.tool-card{
+  display:flex; flex-direction:column; gap:10px;
+  background:var(--basalt-2);
+  border:1px solid var(--hairline);
+  border-radius:7px;
+  padding:20px;
+  text-decoration:none;
+  color:var(--limestone);
+  transition:border-color .2s ease, transform .15s ease, background .2s ease;
+}
+.tool-card:hover{
+  border-color:var(--accent, var(--ochre));
+  transform:translateY(-3px);
+  background:var(--basalt-3);
+}
+.tool-card__name{ font-family:var(--display); font-weight:600; font-size:17px; }
+.tool-card__desc{ font-size:13.5px; color:var(--limestone-70); line-height:1.5; }
+.tool-card__tag{
+  margin-top:auto; align-self:flex-start;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--basalt); background:var(--accent, var(--ochre));
+  padding:4px 8px; border-radius:3px;
+}
 
-  .hero-photo{
-    width:132px;height:132px;
-    border-radius:6px;
-    object-fit:cover;
-    border:1px solid var(--line);
-    box-shadow:0 12px 26px rgba(42,36,23,.18);
-  }
+.discipline[data-a="rust"] .tool-card{ --accent:var(--rust); }
+.discipline[data-a="ochre"] .tool-card{ --accent:var(--ochre); }
+.discipline[data-a="malachite"] .tool-card{ --accent:var(--malachite); }
+.discipline[data-a="slate"] .tool-card{ --accent:var(--slate); }
 
-  .eyebrow{font-size:.72rem;color:var(--verdigris);text-transform:uppercase;margin-bottom:14px;}
+/* ============================================================
+   PLANETARY
+   ============================================================ */
+.dial{
+  display:flex; gap:12px; flex-wrap:wrap;
+  padding:24px; background:var(--basalt-2);
+  border:1px solid var(--hairline); border-radius:8px;
+  margin-bottom:22px;
+}
+.dial__btn{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  background:none; border:none; cursor:pointer; padding:8px;
+  border-radius:6px; color:var(--limestone-70);
+  transition:background .2s ease, color .2s ease;
+}
+.dial__btn:hover{ background:rgba(237,230,214,.05); color:var(--limestone); }
+.dial__btn.is-active{ background:rgba(237,230,214,.08); color:var(--limestone); }
+.dial__sphere{ width:34px; height:34px; border-radius:50%; }
+.dial__label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; }
 
-  h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:clamp(2.1rem, 5vw, 3.1rem);
-    letter-spacing:-.01em;
-    color:var(--ink);
-  }
+.planet-panel{
+  background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px;
+  padding:32px; display:grid; grid-template-columns:1fr 1fr; gap:32px;
+}
+@media (max-width:700px){ .planet-panel{ grid-template-columns:1fr; } }
+.planet-panel h3{ font-size:26px; margin-bottom:6px; }
+.planet-panel__tag{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); margin-bottom:16px; display:block; }
+.planet-panel__fact{ font-size:14.5px; color:var(--limestone-70); margin-bottom:10px; }
+.moon-chip-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.moon-chip{
+  font-family:var(--mono); font-size:11.5px; padding:7px 11px; border-radius:5px;
+  background:rgba(237,230,214,.05); border:1px solid var(--hairline);
+}
+.moon-chip b{ color:var(--ochre); font-weight:500; }
 
-  .role-line{margin-top:14px;color:var(--ink-soft);font-size:1.02rem;max-width:56ch;}
-  .role-line .sep{color:var(--muted);padding:0 8px;}
+.hydrogen-card{
+  margin-top:20px; display:flex; justify-content:space-between; align-items:center; gap:20px;
+  flex-wrap:wrap; padding:24px 28px; border-radius:8px;
+  background:linear-gradient(135deg, rgba(122,143,166,.14), rgba(20,18,15,0));
+  border:1px solid var(--hairline);
+}
+.hydrogen-card h4{ font-size:18px; margin-bottom:6px; }
+.hydrogen-card p{ font-size:13.5px; color:var(--limestone-70); max-width:480px; }
 
-  @media(max-width:640px){
-    .hero-inner{grid-template-columns:1fr;text-align:left;}
-    header{padding:64px 0 48px;}
-  }
+/* ============================================================
+   ABOUT TEASER
+   ============================================================ */
+.about-teaser{
+  display:grid; grid-template-columns:auto 1fr; gap:40px; align-items:center;
+}
+@media (max-width:700px){ .about-teaser{ grid-template-columns:1fr; } }
+.about-teaser__photo{
+  width:132px; height:132px; border-radius:50%;
+  background:var(--basalt-3); border:1px solid var(--hairline-str);
+  background-image:url('1000031502 (1).jpg'); background-size:cover; background-position:center;
+}
+.about-teaser p{ color:var(--limestone-70); max-width:560px; margin-bottom:20px; }
 
-  section{padding:56px 0;border-bottom:1px solid var(--line);}
-  section:last-of-type{border-bottom:none;}
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer{
+  margin-left:56px;
+  border-top:1px solid var(--hairline);
+  padding:48px 0 64px;
+}
+@media (max-width:820px){ .site-footer{ margin-left:9px; } }
+.site-footer__inner{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; }
+.site-footer a{ text-decoration:none; }
+.footer-links{ display:flex; gap:20px; flex-wrap:wrap; }
+.footer-links a{ font-family:var(--mono); font-size:12.5px; color:var(--limestone-70); }
+.footer-links a:hover{ color:var(--ochre); }
+.footer-note{ font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
 
-  .stratum{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
-  .stratum-swatch{width:22px;height:10px;border-radius:2px;flex-shrink:0;}
-  .stratum-label{font-size:.72rem;text-transform:uppercase;color:var(--muted);}
-  h2{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:1.5rem;
-    font-weight:600;
-    color:var(--ink);
-    margin-top:2px;
-  }
-
-  #about    .stratum-swatch{background:var(--oxide);}
-  #research .stratum-swatch{background:var(--verdigris);}
-  #projects .stratum-swatch{background:var(--clay);}
-  #skills   .stratum-swatch{background:var(--slate-blue);}
-  #outreach .stratum-swatch{background:var(--plum);}
-  #contact  .stratum-swatch{background:var(--oxide-soft);}
-
-  .lede{color:var(--ink-soft);max-width:70ch;font-size:1.02rem;}
-
-  .card{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:24px;
-    margin-top:18px;
-    box-shadow:0 1px 2px rgba(42,36,23,.04);
-    opacity:0;
-    transform:translateY(14px);
-    transition:opacity .5s ease, transform .5s ease;
-  }
-  .card.in-view{opacity:1;transform:translateY(0);}
-
-  .card h3{font-family:'Space Grotesk',sans-serif;font-size:1.08rem;font-weight:600;color:var(--ink);margin-bottom:8px;}
-  .card p{color:var(--ink-soft);font-size:.96rem;}
-
-  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  .card-grid .card{margin-top:0;}
-  @media(max-width:700px){.card-grid{grid-template-columns:1fr;}}
-
-  .launch-button{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    margin-top:14px;
-    padding:9px 16px;
-    border:1px solid var(--oxide-soft);
-    border-radius:6px;
-    color:var(--oxide);
-    font-size:.9rem;
-    font-weight:500;
-  }
-  .launch-button:hover{background:var(--oxide);color:var(--surface);border-color:var(--oxide);}
-
-  .status{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.68rem;
-    padding:3px 9px;
-    border-radius:20px;
-    margin-bottom:10px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-  }
-  .status.live{background:rgba(63,107,87,.12);color:var(--verdigris);border:1px solid rgba(63,107,87,.35);}
-  .status.waking{background:rgba(138,106,61,.13);color:var(--clay);border:1px solid rgba(138,106,61,.35);}
-  .status.offline{background:rgba(161,72,30,.1);color:var(--oxide);border:1px solid rgba(161,72,30,.3);}
-  .status .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
-
-  .skill-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:18px;}
-  .skill-row .card p b{color:var(--ink);}
-
-  #contact ul{list-style:none;}
-  #contact li{margin-bottom:10px;font-size:.98rem;}
-  #contact li span{color:var(--muted);display:inline-block;width:84px;}
-
-  footer{text-align:center;padding:32px 0 48px;color:var(--muted);font-size:.8rem;}
-
-  @media (prefers-reduced-motion: reduce){
-    html{scroll-behavior:auto;}
-    .card{opacity:1;transform:none;transition:none;}
-  }
+/* fade-in on scroll */
+.reveal{ opacity:0; transform:translateY(16px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.is-visible{ opacity:1; transform:translateY(0); }
+@media (prefers-reduced-motion:reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
 </style>
 </head>
 <body>
 
-  <nav class="rail" aria-label="Section navigation">
-    <a class="rail-band" data-target="about" href="#about" style="background:rgba(161,72,30,.10)"><span>ABOUT</span></a>
-    <a class="rail-band" data-target="research" href="#research" style="background:rgba(63,107,87,.10)"><span>RESEARCH</span></a>
-    <a class="rail-band" data-target="projects" href="#projects" style="background:rgba(138,106,61,.12)"><span>PROJECTS</span></a>
-    <a class="rail-band" data-target="skills" href="#skills" style="background:rgba(74,100,131,.10)"><span>SKILLS</span></a>
-    <a class="rail-band" data-target="outreach" href="#outreach" style="background:rgba(122,77,99,.10)"><span>OUTREACH</span></a>
-    <a class="rail-band" data-target="contact" href="#contact" style="background:rgba(201,138,92,.12)"><span>CONTACT</span></a>
-  </nav>
+<!-- CORE-LOG STRIP -->
+<div class="core-strip" id="coreStrip" data-section="hero">
+  <span class="core-strip__unit">CORE LOG</span>
+  <span class="core-strip__depth" id="depthLabelStrip">0.0 M</span>
+</div>
 
-  <header>
-    <svg class="strata-bg" viewBox="0 0 920 260" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,220 C 200,200 300,240 460,215 C 620,190 750,225 920,205 L920,260 L0,260 Z" fill="#e4dabf"/>
-      <path d="M0,190 C 220,215 320,175 480,195 C 640,215 780,180 920,200 L920,260 L0,260 Z" fill="#ddd0b2" opacity=".8"/>
-    </svg>
-    <div class="wrap hero-inner">
-      <img class="hero-photo" src="1000031502 (1).jpg" alt="Portrait of Eaftada Tasin Eafti">
+<!-- HEADER -->
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="#top" class="brand">EAFTADA<span>.</span></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">≡</button>
+    <nav class="nav" id="mainNav">
+      <a href="#tools">Geo Tools</a>
+      <a href="#planetary">Planetary</a>
+      <a href="/about/">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="depth-readout">DEPTH <b id="depthLabelHeader">0.0 m</b></div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <svg class="hero__strata" viewBox="0 0 1200 500" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,500 L0,380 Q300,340 600,375 T1200,360 L1200,500 Z" fill="#221E17"/>
+    <path d="M0,500 L0,430 Q350,400 700,425 T1200,410 L1200,500 Z" fill="#2A2419"/>
+    <path d="M0,500 L0,470 Q400,450 800,468 T1200,460 L1200,500 Z" fill="#7A4224" opacity="0.5"/>
+    <line x1="120" y1="330" x2="380" y2="500" stroke="#5C9683" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.4"/>
+  </svg>
+
+  <div class="wrap hero__content">
+    <span class="eyebrow">Geoscience · Geospatial Tools · Planetary Science</span>
+    <h1>Read the rock.<br><em>Run</em> the numbers.</h1>
+    <p class="lede">Free, in-browser tools for structural geology, mineralogy, geochemistry, hydrology, and optical mineralogy — built by a geology student, for students and researchers who'd rather not open five different applications to check one diagram.</p>
+    <div class="hero__cta">
+      <a href="#tools" class="btn btn--primary">Open the toolbox →</a>
+      <a href="/about/" class="btn btn--ghost">About the author</a>
+    </div>
+
+    <div class="ticker" id="ticker" role="note" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- TOOLBOX -->
+<section class="section" id="tools">
+  <div class="wrap">
+    <div class="section__head reveal">
       <div>
-        <div class="eyebrow mono">Geology & Mining · University of Barishal</div>
-        <h1>Eaftada Tasin Eafti</h1>
-        <p class="role-line">Regional Volunteer at Durbin <span class="sep">/</span> IT Coordinator at UBGS <span class="sep">/</span> Former IT Manager at TLC</p>
+        <span class="eyebrow">Section 02 — The Toolbox</span>
+        <h2>Geological Tools</h2>
+      </div>
+      <div class="section__range">0 – 30 M<br>structural · mineral · fluid</div>
+    </div>
+
+    <div class="discipline reveal" data-a="rust">
+      <div class="discipline__head">
+        <h3>Structural Geology</h3>
+        <span class="discipline__count">3 tools</span>
+      </div>
+      <div class="card-grid">
+        <a class="tool-card" href="/geotools/structural/stereonet/">
+          <span class="tool-card__name">Stereonet Plotter</span>
+          <span class="tool-card__desc">Plot strike/dip as poles and great circles on an equal-area stereonet.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/structural/apparent-dip/">
+          <span class="tool-card__name">Apparent ↔ True Dip</span>
+          <span class="tool-card__desc">Convert between apparent dip on a section and true dip of a plane.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/structural/fold-vergence/">
+          <span class="tool-card__name">Fold Vergence Identifier</span>
+          <span class="tool-card__desc">Determine vergence direction from bedding and axial-plane orientation.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
       </div>
     </div>
-  </header>
 
-  <main class="wrap">
-
-    <section id="about">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 01</span>
+    <div class="discipline reveal" data-a="ochre">
+      <div class="discipline__head">
+        <h3>Mineralogy</h3>
+        <span class="discipline__count">2 tools</span>
       </div>
-      <h2>About</h2>
-      <div class="card">
-        <p>I'm a 3rd-year BSc student in Geology and Mining at the University of Barishal, Bangladesh, with research interests in geomorphology, hydrogeology, and the application of geospatial tools to earth science problems.</p>
-        <p style="margin-top:14px;">During my undergraduate studies I contributed to two peer-reviewed publications indexed on ScienceDirect - one examining geomorphic index alterations in a coastal river system in Bangladesh, and another on hydrogeochemical characterisation of groundwater in coastal Bangladesh. My contributions involved geospatial figure preparation and graphical data visualisation, for which I was acknowledged by name in both papers. Working inside active research teams at this stage has given me a direct look at how field data becomes published scientific work.</p>
-        <p style="margin-top:14px;">Alongside my academic work, I built and operated a radio astronomy telescope that successfully detected the 21 cm Hydrogen Line emission of the Milky Way - an independent project spanning hardware construction, signal processing, and observational data interpretation. I've also developed several open-access geoscience tools, including a QFL Ternary Diagram Builder and Lithora, a web application for geochemical index calculations and data visualisation, built in Python. </p>
-        <p style="margin-top:14px;">I work with ArcGIS for spatial analysis and GIS mapping, and Python for data processing and application development - most recently learning PyVista and GemPy for 3D geological modelling and visualisation. I serve as IT Coordinator at the University of Barishal Geological Society and as a Regional Volunteer at Durbin, an astronomical society focused on public science outreach and community engagement.</p>
+      <div class="card-grid">
+        <a class="tool-card" href="/geotools/mineralogy/mohs-scale/">
+          <span class="tool-card__name">Mohs Hardness Explorer</span>
+          <span class="tool-card__desc">Interactive scratch-test scale from talc to diamond, with reference minerals.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/mineralogy/crystal-system/">
+          <span class="tool-card__name">Crystal System Identifier</span>
+          <span class="tool-card__desc">Step through symmetry to identify one of the seven crystal systems.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
       </div>
-    </section>
+    </div>
 
-    <section id="research">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 02</span>
+    <div class="discipline reveal" data-a="ochre">
+      <div class="discipline__head">
+        <h3>Geochemistry</h3>
+        <span class="discipline__count">3 tools</span>
       </div>
-      <h2>Research Contributions</h2>
-      <p class="lede">Acknowledged by name in two peer-reviewed publications indexed on ScienceDirect, for data visualisation and figure preparation during undergraduate research.</p>
-
-      <div class="card">
-        <h3>Geomorphic index alterations and socioeconomic implications: a case study of a coastal river system in Bangladesh</h3>
-        <p>Contributed geospatial figures and graphical outputs used in the analysis.</p>
-        <a href="https://www.sciencedirect.com/science/article/pii/S259006172500047X" target="_blank" class="launch-button">📚 View publication</a>
+      <div class="card-grid">
+        <a class="tool-card" href="/geotools/geochemistry/qfl_ternary/">
+          <span class="tool-card__name">QFL Ternary Diagram</span>
+          <span class="tool-card__desc">Classify sandstones by quartz–feldspar–lithic composition.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/geochemistry/harker/">
+          <span class="tool-card__name">Harker Diagram Plotter</span>
+          <span class="tool-card__desc">Plot major-oxide variation diagrams against SiO₂ for a rock suite.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/geochemistry/cipw-norm/">
+          <span class="tool-card__name">CIPW Norm Calculator</span>
+          <span class="tool-card__desc">Convert whole-rock oxide analyses into normative mineralogy.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
       </div>
+    </div>
 
-      <div class="card">
-        <h3>Hydrogeochemical characterization and quality assessment of groundwater resources in Amtali Upazila, Barguna: a study of coastal Bangladesh</h3>
-        <p>Contributed graphical data visualisation supporting the hydrogeochemical analysis.</p>
-        <a href="https://www.sciencedirect.com/science/article/pii/S2451912X2500025X" target="_blank" class="launch-button">📚 View publication</a>
+    <div class="discipline reveal" data-a="malachite">
+      <div class="discipline__head">
+        <h3>Hydrology</h3>
+        <span class="discipline__count">2 tools</span>
       </div>
-    </section>
-
-    <section id="projects">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 03</span>
+      <div class="card-grid">
+        <a class="tool-card" href="/geotools/hydrology/piper/">
+          <span class="tool-card__name">Piper Diagram Generator</span>
+          <span class="tool-card__desc">Classify groundwater facies from major-ion chemistry.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/hydrology/gwqi/">
+          <span class="tool-card__name">Groundwater Quality Index</span>
+          <span class="tool-card__desc">Compute a weighted GWQI from standard water-quality parameters.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
       </div>
-      <h2>Projects</h2>
+    </div>
 
-      <div class="card">
-        <h3>Radio Astronomy Telescope</h3>
-        <p>A self-built radio telescope that detected the 21 cm Hydrogen Line of the Milky Way — spanning hardware construction, signal processing, and data interpretation.</p>
-        <a href="https://thedailycampus.com/public-university/215873?fbclid=IwdGRjcAMfqQljbGNrAx-pBGV4dG4DYWVtAjExAAEeUp1uaeeg_4SW98PNNdTbdOYEaenXUGKEJX5Y6VjuGuMfiLfOrwcE5k4VDgo_aem_rU0QS1zD_Yq4P7zVODcSAw" target="_blank" class="launch-button">📡 Media coverage</a>
+    <div class="discipline reveal" data-a="slate">
+      <div class="discipline__head">
+        <h3>Optical Mineralogy</h3>
+        <span class="discipline__count">2 tools</span>
       </div>
-
-      <div class="card-grid" style="margin-top:18px;">
-        <div class="card">
-          <span class="status offline"><span class="dot"></span>Currently offline</span>
-          <h3>QFL Ternary Builder</h3>
-          <p>A tool for creating QFL ternary diagrams, built with Anvil and Python. Its free-tier hosting has been retired, so the live link is currently down.</p>
-          <a href="https://shy-worthy-grass.anvil.app/" target="_blank" class="launch-button">🚀 Visit anyway</a>
-        </div>
-        <div class="card">
-          <span class="status waking"><span class="dot"></span>Live — slow first load</span>
-          <h3>Lithora Geoscience Toolkit</h3>
-          <p>A Streamlit app for building complex geochemical plots. It's live, but sits on a free tier — the first load after a while asleep can take 20–30 seconds to spin up.</p>
-          <a href="https://lithora.streamlit.app/" target="_blank" class="launch-button">🚀 Launch app</a>
-        </div>
+      <div class="card-grid">
+        <a class="tool-card" href="/geotools/optical-mineralogy/michel-levy/">
+          <span class="tool-card__name">Michel-Lévy Interference Chart</span>
+          <span class="tool-card__desc">Read birefringence and thickness off the classic interference-colour chart.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
+        <a class="tool-card" href="/geotools/optical-mineralogy/birefringence/">
+          <span class="tool-card__name">Birefringence Calculator</span>
+          <span class="tool-card__desc">Compute Δ from indicated refractive indices, or solve for the missing value.</span>
+          <span class="tool-card__tag">In-browser Python</span>
+        </a>
       </div>
+    </div>
 
-      <div class="card">
-        <span class="status offline"><span class="dot"></span>Currently offline</span>
-        <h3>Litholab</h3>
-        <p>A web app for building the Chemical Index of Alteration (CIA), rainfall plotting, and more. Temporarily down.</p>
-        <a href="https://litholab.xyz/" target="_blank" class="launch-button">🚀 Visit anyway</a>
+  </div>
+</section>
+
+<!-- PLANETARY SCIENCE -->
+<section class="section" id="planetary">
+  <div class="wrap">
+    <div class="section__head reveal">
+      <div>
+        <span class="eyebrow">Section 03 — Beyond the Outcrop</span>
+        <h2>Planetary Science &amp; Astronomy</h2>
       </div>
-    </section>
+      <div class="section__range">30 – 48 M<br>planets · moons · radio astronomy</div>
+    </div>
 
-    <section id="skills">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 04</span>
+    <div class="reveal">
+      <div class="dial" id="dial" role="tablist" aria-label="Select a planet"></div>
+      <div class="planet-panel" id="planetPanel"></div>
+    </div>
+
+    <div class="hydrogen-card reveal">
+      <div>
+        <h4>21 cm Hydrogen Line — built, not just studied</h4>
+        <p>A self-built radio telescope used to detect the Milky Way's neutral hydrogen emission — from antenna to spectrum. Full write-up and data coming soon.</p>
       </div>
-      <h2>Skills</h2>
+      <a href="/astronomy/hydrogen-line/" class="btn btn--ghost">Read the build →</a>
+    </div>
+  </div>
+</section>
 
-      <div class="skill-row">
-        <div class="card">
-          <h3>Geospatial & Scientific Computing</h3>
-          <p><b>ArcGIS</b> — spatial analysis, GIS mapping, geospatial figure preparation.<br><br><b>Python</b> — data processing, visualisation, web application development.<br><br><b>Geostatistics</b> — quantitative analysis applied to geological datasets.</p>
-        </div>
-        <div class="card">
-          <h3>3D Geological Modelling</h3>
-          <p><b>GemPy</b> — implicit 3D structural geological modelling.<br><br><b>PyVista</b> — 3D scientific visualisation and mesh analysis in Python.</p>
-        </div>
-        <div class="card">
-          <h3>Scientific Visualisation & Design</h3>
-          <p><b>Photoshop</b> — scientific figure editing and poster design.<br><br><b>Python</b> — Matplotlib and Seaborn for graphs, plots, and charts.<br><br><b>Adobe Animate</b> — basic animation for science communication and outreach content.</p>
-        </div>
-      </div>
-    </section>
+<!-- ABOUT TEASER -->
+<section class="section" id="about-teaser">
+  <div class="wrap about-teaser reveal">
+    <div class="about-teaser__photo" role="img" aria-label="Portrait of Eaftada Tasin Eafti"></div>
+    <div>
+      <span class="eyebrow">Section 04 — Bedrock</span>
+      <h2 style="margin:8px 0 14px; font-size:28px;">About the author</h2>
+      <p>Geology &amp; Mining student at the University of Barishal, acknowledged in two ScienceDirect-indexed papers for geospatial figure work, and builder of the tools on this site. Full research, projects, and outreach record on the about page.</p>
+      <a href="/about/" class="btn btn--primary">View full profile →</a>
+    </div>
+  </div>
+</section>
 
-    <section id="outreach">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 05</span>
-      </div>
-      <h2>Outreach, Events & Community Work</h2>
+<!-- FOOTER -->
+<footer class="site-footer" id="contact">
+  <div class="wrap site-footer__inner">
+    <span class="footer-note">Eaftada.com — Barishal, Bangladesh<br>Tools run client-side via Pyodide. No server, no tracking.</span>
+    <div class="footer-links">
+      <a href="mailto:e.tasin02@gmail.com">e.tasin02@gmail.com</a>
+      <a href="https://www.linkedin.com/in/eaftada-tasin-eafti-566ba528b/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/Etasin16" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
 
-      <div class="card">
-        <h3>Planetary Parade Observation Camp</h3>
-        <p>As Durbin's regional volunteer, ran public telescope outreach sessions with the Barishal University Physics Club, teaching local students to operate Unistellar and reflecting-mirror telescopes. Sessions included live observation and imaging of the Orion Nebula, Jupiter and its four Galilean moons, Mars, and Saturn — bringing hands-on astronomy to non-specialist audiences.</p>
-      </div>
+<script>
+/* ---------- Mobile nav toggle ---------- */
+document.getElementById('navToggle').addEventListener('click', () => {
+  document.getElementById('mainNav').classList.toggle('open');
+});
 
-      <div class="card">
-        <h3>Zoom the Earth 2.0</h3>
-        <p>Arranged by UBGS, YouthMappers BU, and EAGE-BU. Provided IT support, designed promotional materials, and coordinated event-day logistics for this multi-organisational geoscience outreach programme. YouthMappers BU is affiliated with the international YouthMappers network.</p>
-      </div>
+/* ---------- Depth readout on scroll ---------- */
+const depthHeader = document.getElementById('depthLabelHeader');
+const depthStrip  = document.getElementById('depthLabelStrip');
+const MAX_DEPTH = 48; // metres, purely narrative
+function updateDepth(){
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const frac = scrollable > 0 ? window.scrollY / scrollable : 0;
+  const depth = (frac * MAX_DEPTH).toFixed(1);
+  depthHeader.textContent = depth + ' m';
+  depthStrip.textContent = depth + ' M';
+}
+window.addEventListener('scroll', updateDepth, { passive:true });
+updateDepth();
 
-      <div class="card">
-        <h3>Geology Night 2023</h3>
-        <p>Annual cultural programme of the Department of Geology and Mining, University of Barishal. Managed technical production, stage lighting, audio-visual systems, and live media operation for the event.</p>
-      </div>
-    </section>
+/* ---------- Core-strip lithology per section ---------- */
+const strip = document.getElementById('coreStrip');
+const sections = [
+  { id:'top', name:'hero' },
+  { id:'tools', name:'tools' },
+  { id:'planetary', name:'planetary' },
+  { id:'about-teaser', name:'about' },
+];
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting){
+      const match = sections.find(s => s.id === e.target.id);
+      if (match) strip.dataset.section = match.name;
+    }
+  });
+}, { threshold:0.35 });
+sections.forEach(s => {
+  const el = document.getElementById(s.id);
+  if (el) observer.observe(el);
+});
 
-    <section id="contact">
-      <div class="stratum">
-        <span class="stratum-swatch"></span>
-        <span class="stratum-label mono">Stratum 06</span>
-      </div>
-      <h2>Contact</h2>
-      <div class="card">
-        <ul>
-          <li><span>Email</span><a href="mailto:e.tasin02@gmail.com">e.tasin02@gmail.com</a></li>
-          <li><span>LinkedIn</span><a href="https://www.linkedin.com/in/eaftada-tasin-eafti-566ba528b/" target="_blank">View profile</a></li>
-          <li><span>GitHub</span><a href="https://github.com/Etasin16" target="_blank">Etasin16</a></li>
-        </ul>
-      </div>
-    </section>
+/* ---------- Reveal-on-scroll ---------- */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting){ e.target.classList.add('is-visible'); revealObserver.unobserve(e.target); }
+  });
+}, { threshold:0.12 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-  </main>
+/* ---------- Geologic-principle ticker ---------- */
+const principles = [
+  { law:'Law of Superposition', text:'In an undisturbed sequence, the oldest layer lies at the bottom.' },
+  { law:'Original Horizontality', text:'Sediments are deposited in horizontal, or near-horizontal, layers under gravity.' },
+  { law:'Cross-Cutting Relationships', text:'A fault or intrusion is younger than any rock it cuts through.' },
+  { law:'Faunal Succession', text:'Fossil assemblages succeed one another in a predictable, chronological order.' },
+  { law:'Uniformitarianism', text:'The processes shaping Earth today are the same ones that shaped it in the past.' },
+];
+const tickerEl = document.getElementById('ticker');
+let tIndex = 0;
+function renderTicker(){
+  const p = principles[tIndex];
+  const item = document.createElement('div');
+  item.className = 'ticker__item';
+  item.innerHTML = `<b>${p.law}</b><span>${p.text}</span>`;
+  tickerEl.querySelectorAll('.ticker__item').forEach(el => el.remove());
+  tickerEl.appendChild(item);
+  requestAnimationFrame(() => item.classList.add('is-active'));
+  tIndex = (tIndex + 1) % principles.length;
+}
+renderTicker();
+setInterval(renderTicker, 4800);
 
-  <footer>Built by Eaftada Tasin Eafti — Barishal, Bangladesh</footer>
+/* ---------- Planetary dial ---------- */
+const planets = [
+  { name:'Mercury', color:'#9C9186', fact1:'A day on Mercury (sunrise to sunrise) lasts 176 Earth days — longer than its year.', fact2:'Its surface holds permanently shadowed craters cold enough to trap water ice, despite being the closest planet to the Sun.', moons:[] },
+  { name:'Venus', color:'#D9B27C', fact1:'Venus rotates backwards and so slowly that its day is longer than its year.', fact2:'Surface pressure is 92x Earth\'s — equivalent to standing 900 m underwater.', moons:[] },
+  { name:'Earth', color:'#4C7A9C', fact1:'The only known body with active plate tectonics recycling its crust over geologic time.', fact2:'71% ocean-covered, which is why early astronauts called it "the blue marble."', moons:[{n:'Moon', f:'Stabilises Earth\'s axial tilt, which keeps our seasons predictable.'}] },
+  { name:'Mars', color:'#B25C3D', fact1:'Home to Olympus Mons, the tallest volcano in the solar system at nearly 22 km.', fact2:'Dust storms can occasionally engulf the entire planet for weeks.', moons:[{n:'Phobos', f:'Orbits so close and fast it will likely break apart into a ring within ~50 million years.'}] },
+  { name:'Jupiter', color:'#C9A27A', fact1:'The Great Red Spot is a storm wider than Earth that has raged for centuries.', fact2:'Jupiter radiates more heat than it receives from the Sun, left over from its formation.', moons:[{n:'Io', f:'The most volcanically active body in the solar system, driven by Jupiter\'s tidal flexing.'},{n:'Europa', f:'A liquid water ocean beneath its ice shell — one of the best bets for extraterrestrial life.'}] },
+  { name:'Saturn', color:'#D9C48A', fact1:'Its rings are made almost entirely of ice, most no bigger than a house.', fact2:'Saturn is less dense than water — it would float, in principle, in a large enough ocean.', moons:[{n:'Titan', f:'Has rivers, lakes, and rain — but made of liquid methane and ethane, not water.'},{n:'Enceladus', f:'Geysers at its south pole spray water-ice from a subsurface ocean into space.'}] },
+  { name:'Uranus', color:'#8FC4C9', fact1:'Rotates on its side, at roughly 98°, likely from an ancient collision.', fact2:'Its blue-green colour comes from methane absorbing red light in the atmosphere.', moons:[{n:'Miranda', f:'Has a 20 km-high cliff, one of the tallest known escarpments in the solar system.'}] },
+  { name:'Neptune', color:'#5C7AC9', fact1:'Has the fastest winds recorded in the solar system, exceeding 2,100 km/h.', fact2:'Takes 165 Earth years to orbit the Sun — it has completed just one orbit since its 1846 discovery.', moons:[{n:'Triton', f:'Orbits backwards relative to Neptune\'s rotation, suggesting it\'s a captured Kuiper Belt object.'}] },
+];
 
-  <script>
-    var cards = document.querySelectorAll('.card');
-    var cardObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(entry.isIntersecting){
-          entry.target.classList.add('in-view');
-          cardObserver.unobserve(entry.target);
-        }
-      });
-    }, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
-    cards.forEach(function(c){cardObserver.observe(c);});
+const dial = document.getElementById('dial');
+const panel = document.getElementById('planetPanel');
 
-    var bands = document.querySelectorAll('.rail-band');
-    var sections = document.querySelectorAll('main section');
-    var sectionObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        var id = entry.target.id;
-        var band = document.querySelector('.rail-band[data-target="'+id+'"]');
-        if(!band) return;
-        if(entry.isIntersecting){
-          bands.forEach(function(b){b.classList.remove('active');});
-          band.classList.add('active');
-        }
-      });
-    }, {threshold:.35});
-    sections.forEach(function(s){sectionObserver.observe(s);});
-  </script>
+planets.forEach((p, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'dial__btn' + (i === 3 ? ' is-active' : '');
+  btn.setAttribute('role','tab');
+  btn.innerHTML = `<span class="dial__sphere" style="background:${p.color}"></span><span class="dial__label">${p.name}</span>`;
+  btn.addEventListener('click', () => selectPlanet(i));
+  dial.appendChild(btn);
+});
 
+function selectPlanet(i){
+  const p = planets[i];
+  dial.querySelectorAll('.dial__btn').forEach((b, idx) => b.classList.toggle('is-active', idx === i));
+  const moonsHtml = p.moons.length
+    ? `<div class="moon-chip-list">${p.moons.map(m => `<span class="moon-chip"><b>${m.n}:</b> ${m.f}</span>`).join('')}</div>`
+    : `<div class="moon-chip-list"><span class="moon-chip">No major moons</span></div>`;
+  panel.innerHTML = `
+    <div>
+      <h3>${p.name}</h3>
+      <span class="planet-panel__tag">Planet ${i+1} of 8</span>
+      <p class="planet-panel__fact">${p.fact1}</p>
+      <p class="planet-panel__fact">${p.fact2}</p>
+    </div>
+    <div>
+      <span class="eyebrow">Notable moons</span>
+      ${moonsHtml}
+    </div>
+  `;
+}
+selectPlanet(3); // Earth default
+</script>
 </body>
 </html>
