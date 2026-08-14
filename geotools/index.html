@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geotoolbox — Eaftada</title>
+<meta name="description" content="A growing collection of free, in-browser tools for structural geology, mineralogy, geochemistry, hydrology, and optical mineralogy.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+  --max:1180px;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.wrap{ max-width:var(--max); margin:0 auto; padding:0 32px; }
+@media (max-width:640px){ .wrap{ padding:0 20px; } }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+/* header */
+header{ border-bottom:1px solid var(--hairline); padding:18px 0; }
+.header-inner{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+/* hero */
+.hero{ padding:64px 0 44px; border-bottom:1px solid var(--hairline); }
+.hero h1{ font-size:clamp(32px,4.6vw,52px); margin:12px 0 16px; }
+.hero p{ max-width:620px; color:var(--limestone-70); font-size:15.5px; margin-bottom:8px; }
+.hero__stats{ display:flex; gap:28px; margin-top:28px; flex-wrap:wrap; }
+.stat{ font-family:var(--mono); }
+.stat b{ display:block; font-size:24px; color:var(--ochre); font-weight:500; }
+.stat span{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--limestone-45); }
+
+/* controls */
+.controls{
+  position:sticky; top:0; z-index:20; background:rgba(20,18,15,.92); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--hairline); padding:16px 0;
+}
+.controls-inner{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+.search{
+  flex:1; min-width:200px; background:var(--basalt-2); border:1px solid var(--hairline-str);
+  color:var(--limestone); border-radius:6px; padding:10px 14px; font-family:var(--mono); font-size:13px;
+}
+.search:focus{ border-color:var(--ochre); outline:none; }
+.pills{ display:flex; gap:8px; flex-wrap:wrap; }
+.pill{
+  font-family:var(--mono); font-size:12px; letter-spacing:.03em; padding:8px 14px; border-radius:20px;
+  border:1px solid var(--hairline-str); background:none; color:var(--limestone-70); cursor:pointer;
+  transition:border-color .2s ease, color .2s ease, background .2s ease;
+}
+.pill:hover{ border-color:var(--ochre); color:var(--ochre); }
+.pill.is-active{ background:var(--limestone); color:var(--basalt); border-color:var(--limestone); font-weight:500; }
+
+/* discipline sections */
+main{ padding:52px 0 100px; }
+.discipline{ margin-bottom:56px; }
+.discipline__head{
+  display:flex; align-items:baseline; gap:14px; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--hairline);
+}
+.discipline__head h2{ font-size:22px; font-weight:600; }
+.discipline__count{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+
+.card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px; }
+.tool-card{
+  display:flex; flex-direction:column; gap:10px; background:var(--basalt-2); border:1px solid var(--hairline);
+  border-radius:7px; padding:22px; text-decoration:none; color:var(--limestone);
+  transition:border-color .2s ease, transform .15s ease, background .2s ease;
+}
+.tool-card:hover{ border-color:var(--accent, var(--ochre)); transform:translateY(-3px); background:var(--basalt-3); }
+.tool-card__top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.tool-card__name{ font-family:var(--display); font-weight:600; font-size:17px; }
+.tool-card__desc{ font-size:13.5px; color:var(--limestone-70); line-height:1.5; }
+.status{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
+  padding:3px 7px; border-radius:3px; white-space:nowrap; flex-shrink:0;
+}
+.status--live{ background:var(--malachite); color:var(--basalt); }
+.status--soon{ background:none; border:1px solid var(--hairline-str); color:var(--limestone-45); }
+.tool-card__tag{
+  margin-top:auto; align-self:flex-start; font-family:var(--mono); font-size:10.5px; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--basalt); background:var(--accent, var(--ochre)); padding:4px 8px; border-radius:3px;
+}
+
+.discipline[data-a="rust"] .tool-card{ --accent:var(--rust); }
+.discipline[data-a="ochre"] .tool-card{ --accent:var(--ochre); }
+.discipline[data-a="malachite"] .tool-card{ --accent:var(--malachite); }
+.discipline[data-a="slate"] .tool-card{ --accent:var(--slate); }
+
+.empty-state{ display:none; text-align:center; padding:80px 0; color:var(--limestone-45); font-family:var(--mono); font-size:13px; }
+.empty-state.is-visible{ display:block; }
+
+footer{ border-top:1px solid var(--hairline); padding:32px 0; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <a href="/" class="brand">EAFTADA<span>.</span></a>
+    <span class="crumb"><a href="/">Home</a> / Geotoolbox</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Free · In-browser · No sign-up</span>
+    <h1>The Geotoolbox</h1>
+    <p>Small, focused tools for structural geology, mineralogy, geochemistry, hydrology, and optical mineralogy — the kind of thing you'd otherwise open five different apps for. Everything runs client-side; nothing you enter leaves your browser.</p>
+    <div class="hero__stats">
+      <div class="stat"><b id="statLive">1</b><span>Live tools</span></div>
+      <div class="stat"><b id="statTotal">12</b><span>Planned</span></div>
+      <div class="stat"><b>5</b><span>Disciplines</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="controls">
+  <div class="wrap controls-inner">
+    <input type="text" class="search" id="search" placeholder="Search tools… e.g. stereonet, piper, mohs">
+    <div class="pills" id="pills">
+      <button class="pill is-active" data-filter="all">All</button>
+      <button class="pill" data-filter="structural">Structural</button>
+      <button class="pill" data-filter="mineralogy">Mineralogy</button>
+      <button class="pill" data-filter="geochemistry">Geochemistry</button>
+      <button class="pill" data-filter="hydrology">Hydrology</button>
+      <button class="pill" data-filter="optical">Optical Min.</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div class="discipline" data-group="structural" data-a="rust">
+    <div class="discipline__head"><h2>Structural Geology</h2><span class="discipline__count">3 tools</span></div>
+    <div class="card-grid">
+      <a class="tool-card" data-name="stereonet plotter poles great circles" href="/geotools/structural/stereonet/">
+        <div class="tool-card__top"><span class="tool-card__name">Stereonet Plotter</span><span class="status status--live">Live</span></div>
+        <span class="tool-card__desc">Plot strike/dip as poles and great circles on an equal-area or equal-angle stereonet.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="apparent true dip calculator" href="/geotools/structural/apparent-dip/">
+        <div class="tool-card__top"><span class="tool-card__name">Apparent ↔ True Dip</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Convert between apparent dip on a section and true dip of a plane.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="fold vergence identifier" href="/geotools/structural/fold-vergence/">
+        <div class="tool-card__top"><span class="tool-card__name">Fold Vergence Identifier</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Determine vergence direction from bedding and axial-plane orientation.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="discipline" data-group="mineralogy" data-a="ochre">
+    <div class="discipline__head"><h2>Mineralogy</h2><span class="discipline__count">2 tools</span></div>
+    <div class="card-grid">
+      <a class="tool-card" data-name="mohs hardness scale scratch test" href="/geotools/mineralogy/mohs-scale/">
+        <div class="tool-card__top"><span class="tool-card__name">Mohs Hardness Explorer</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Interactive scratch-test scale from talc to diamond, with reference minerals.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="crystal system identifier symmetry" href="/geotools/mineralogy/crystal-system/">
+        <div class="tool-card__top"><span class="tool-card__name">Crystal System Identifier</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Step through symmetry to identify one of the seven crystal systems.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="discipline" data-group="geochemistry" data-a="ochre">
+    <div class="discipline__head"><h2>Geochemistry</h2><span class="discipline__count">3 tools</span></div>
+    <div class="card-grid">
+      <a class="tool-card" data-name="qfl ternary diagram sandstone classification" href="/geotools/geochemistry/qfl_ternary/">
+        <div class="tool-card__top"><span class="tool-card__name">QFL Ternary Diagram</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Classify sandstones by quartz–feldspar–lithic composition.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="harker diagram major oxide variation" href="/geotools/geochemistry/harker/">
+        <div class="tool-card__top"><span class="tool-card__name">Harker Diagram Plotter</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Plot major-oxide variation diagrams against SiO₂ for a rock suite.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="cipw norm calculator normative mineralogy" href="/geotools/geochemistry/cipw-norm/">
+        <div class="tool-card__top"><span class="tool-card__name">CIPW Norm Calculator</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Convert whole-rock oxide analyses into normative mineralogy.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="discipline" data-group="hydrology" data-a="malachite">
+    <div class="discipline__head"><h2>Hydrology</h2><span class="discipline__count">2 tools</span></div>
+    <div class="card-grid">
+      <a class="tool-card" data-name="piper diagram groundwater facies" href="/geotools/hydrology/piper/">
+        <div class="tool-card__top"><span class="tool-card__name">Piper Diagram Generator</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Classify groundwater facies from major-ion chemistry.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="groundwater quality index gwqi" href="/geotools/hydrology/gwqi/">
+        <div class="tool-card__top"><span class="tool-card__name">Groundwater Quality Index</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Compute a weighted GWQI from standard water-quality parameters.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="discipline" data-group="optical" data-a="slate">
+    <div class="discipline__head"><h2>Optical Mineralogy</h2><span class="discipline__count">2 tools</span></div>
+    <div class="card-grid">
+      <a class="tool-card" data-name="michel levy interference colour chart" href="/geotools/optical-mineralogy/michel-levy/">
+        <div class="tool-card__top"><span class="tool-card__name">Michel-Lévy Interference Chart</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Read birefringence and thickness off the classic interference-colour chart.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" data-name="birefringence calculator refractive index" href="/geotools/optical-mineralogy/birefringence/">
+        <div class="tool-card__top"><span class="tool-card__name">Birefringence Calculator</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Compute Δ from indicated refractive indices, or solve for the missing value.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">No tools match your search — try a different term or clear the filter.</div>
+
+</main>
+
+<footer class="wrap">
+  Tools run client-side via Pyodide. No server, no tracking. Suggest a tool → <a href="mailto:e.tasin02@gmail.com" style="color:var(--ochre); text-decoration:none;">e.tasin02@gmail.com</a>
+</footer>
+
+<script>
+const search = document.getElementById('search');
+const pills = document.querySelectorAll('.pill');
+const disciplines = document.querySelectorAll('.discipline');
+const emptyState = document.getElementById('emptyState');
+let activeFilter = 'all';
+
+function applyFilters(){
+  const q = search.value.trim().toLowerCase();
+  let anyVisible = false;
+
+  disciplines.forEach(section => {
+    const group = section.dataset.group;
+    const groupMatches = activeFilter === 'all' || activeFilter === group;
+    let sectionHasVisible = false;
+
+    section.querySelectorAll('.tool-card').forEach(card => {
+      const text = (card.dataset.name + ' ' + card.textContent).toLowerCase();
+      const matches = groupMatches && (q === '' || text.includes(q));
+      card.style.display = matches ? '' : 'none';
+      if (matches) sectionHasVisible = true;
+    });
+
+    section.style.display = sectionHasVisible ? '' : 'none';
+    if (sectionHasVisible) anyVisible = true;
+  });
+
+  emptyState.classList.toggle('is-visible', !anyVisible);
+}
+
+search.addEventListener('input', applyFilters);
+pills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    pills.forEach(p => p.classList.remove('is-active'));
+    pill.classList.add('is-active');
+    activeFilter = pill.dataset.filter;
+    applyFilters();
+  });
+});
+
+// live stats
+document.getElementById('statLive').textContent = document.querySelectorAll('.status--live').length;
+document.getElementById('statTotal').textContent = document.querySelectorAll('.tool-card').length;
+</script>
+</body>
+</html>
