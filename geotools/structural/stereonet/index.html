@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stereonet Plotter — Eaftada</title>
+<meta name="description" content="Plot strike/dip data as poles and great circles on an equal-area or equal-angle stereonet, entirely in-browser.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{
+  border-bottom:1px solid var(--hairline);
+  padding:18px 32px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+}
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:36px; max-width:680px; }
+.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
+.title-block p{ color:var(--limestone-70); font-size:15px; }
+
+.layout{ display:grid; grid-template-columns:380px 1fr; gap:28px; align-items:start; }
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{
+  background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px;
+}
+.panel h2{ font-size:16px; margin-bottom:16px; }
+
+.field-row{ display:flex; gap:8px; margin-bottom:8px; }
+.field{ display:flex; flex-direction:column; gap:4px; }
+.field label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--limestone-45); }
+input, select{
+  background:var(--basalt-3); border:1px solid var(--hairline-str); color:var(--limestone);
+  border-radius:4px; padding:8px 9px; font-family:var(--mono); font-size:13px; width:100%;
+}
+input:focus, select:focus{ border-color:var(--ochre); }
+
+.entry-card{
+  border:1px solid var(--hairline); border-radius:6px; padding:14px; margin-bottom:12px; background:var(--basalt-3);
+}
+.entry-card__top{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+.entry-card__mid{ margin-bottom:8px; }
+.entry-card__bottom{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.checks{ display:flex; gap:14px; }
+.checks label{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--limestone-70); font-family:var(--body); }
+.checks input[type="checkbox"]{ width:auto; }
+.remove-btn{
+  background:none; border:1px solid var(--hairline-str); color:var(--limestone-45);
+  border-radius:4px; padding:5px 9px; font-family:var(--mono); font-size:11px; cursor:pointer;
+}
+.remove-btn:hover{ color:var(--rust); border-color:var(--rust); }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em;
+  padding:11px 18px; border-radius:5px; text-decoration:none; cursor:pointer;
+  border:1px solid var(--hairline-str); background:none; color:var(--limestone);
+  transition:border-color .2s ease, background .2s ease;
+  width:100%;
+}
+.btn:hover{ border-color:var(--ochre); color:var(--ochre); }
+.btn--primary{ background:var(--rust); border-color:var(--rust); color:var(--basalt); font-weight:500; }
+.btn--primary:hover{ background:#D3763F; color:var(--basalt); }
+.btn-row{ display:flex; gap:10px; margin-top:14px; }
+
+.plot-wrap{
+  background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px;
+  min-height:520px; display:flex; align-items:center; justify-content:center; flex-direction:column;
+  padding:24px; gap:16px;
+}
+.plot-wrap img{ max-width:100%; border-radius:4px; }
+.status{ font-family:var(--mono); font-size:12.5px; color:var(--limestone-45); text-align:center; }
+.status.err{ color:var(--rust); }
+
+.opts{ display:flex; gap:14px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+.opts .field{ flex:1; min-width:150px; }
+
+footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">EAFTADA<span>.</span></a>
+  <span class="crumb"><a href="/">Home</a> / <a href="/#tools">Geo Tools</a> / <a href="/geotools/structural/">Structural</a> / Stereonet Plotter</span>
+</header>
+
+<main>
+  <div class="title-block">
+    <span class="eyebrow">Structural Geology · Runs entirely in your browser</span>
+    <h1>Stereonet Plotter</h1>
+    <p>Enter strike/dip measurements to plot poles and great circles on an equal-area (Schmidt) or equal-angle (Wulff) lower-hemisphere stereonet. Strike follows the right-hand rule — dip direction is 90° clockwise from strike. All computation runs client-side via Pyodide; nothing is uploaded.</p>
+  </div>
+
+  <div class="layout">
+    <!-- INPUT PANEL -->
+    <div class="panel">
+      <h2>Planes</h2>
+      <div class="opts">
+        <div class="field">
+          <label for="projection">Projection</label>
+          <select id="projection">
+            <option value="equal-area" selected>Equal-area (Schmidt)</option>
+            <option value="equal-angle">Equal-angle (Wulff)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="entries"></div>
+
+      <div class="btn-row">
+        <button class="btn" id="addEntry">+ Add plane</button>
+        <button class="btn" id="clearAll">Clear all</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn--primary" id="plotBtn">Plot stereonet</button>
+      </div>
+    </div>
+
+    <!-- PLOT -->
+    <div class="plot-wrap" id="plotWrap">
+      <div class="status" id="status">Loading Python runtime (Pyodide) — first load can take 10–20 seconds…</div>
+      <img id="plotImg" style="display:none;" alt="Stereonet plot">
+      <button class="btn" id="downloadBtn" style="display:none; width:auto; padding:9px 16px;">Download PNG</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Tools run client-side via Pyodide (numpy + matplotlib). No server, no data leaves your browser.
+</footer>
+
+<script>
+/* ---------------- Entry rows (JS) ---------------- */
+const entriesEl = document.getElementById('entries');
+const FEATURE_TYPES = ['Bedding','Joint','Fault','Foliation','Other'];
+let entryCount = 0;
+
+function addEntryRow(strike=0, dip=30, type='Bedding', label='', pole=true, plane=false){
+  entryCount++;
+  const id = 'entry-' + entryCount;
+  const card = document.createElement('div');
+  card.className = 'entry-card';
+  card.dataset.id = id;
+  card.innerHTML = `
+    <div class="entry-card__top">
+      <div class="field">
+        <label>Strike (°)</label>
+        <input type="number" class="in-strike" min="0" max="360" value="${strike}">
+      </div>
+      <div class="field">
+        <label>Dip (°)</label>
+        <input type="number" class="in-dip" min="0" max="90" value="${dip}">
+      </div>
+    </div>
+    <div class="entry-card__mid">
+      <div class="field">
+        <label>Feature type</label>
+        <select class="in-type">
+          ${FEATURE_TYPES.map(t => `<option value="${t}" ${t===type?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="entry-card__mid">
+      <div class="field">
+        <label>Label (optional)</label>
+        <input type="text" class="in-label" placeholder="e.g. S0, bed 3" value="${label}">
+      </div>
+    </div>
+    <div class="entry-card__bottom">
+      <div class="checks">
+        <label><input type="checkbox" class="in-pole" ${pole?'checked':''}> Pole</label>
+        <label><input type="checkbox" class="in-plane" ${plane?'checked':''}> Plane</label>
+      </div>
+      <button class="remove-btn" type="button">Remove</button>
+    </div>
+  `;
+  card.querySelector('.remove-btn').addEventListener('click', () => card.remove());
+  entriesEl.appendChild(card);
+}
+
+document.getElementById('addEntry').addEventListener('click', () => addEntryRow());
+document.getElementById('clearAll').addEventListener('click', () => { entriesEl.innerHTML=''; });
+
+// seed with two example measurements
+addEntryRow(120, 35, 'Bedding', 'S0', true, false);
+addEntryRow(45, 78, 'Joint', 'J1', true, true);
+
+function collectEntries(){
+  return Array.from(entriesEl.querySelectorAll('.entry-card')).map(card => ({
+    strike: parseFloat(card.querySelector('.in-strike').value) || 0,
+    dip: parseFloat(card.querySelector('.in-dip').value) || 0,
+    type: card.querySelector('.in-type').value,
+    label: card.querySelector('.in-label').value.trim(),
+    pole: card.querySelector('.in-pole').checked,
+    plane: card.querySelector('.in-plane').checked,
+  }));
+}
+
+/* ---------------- Pyodide setup ---------------- */
+const statusEl = document.getElementById('status');
+const imgEl = document.getElementById('plotImg');
+const downloadBtn = document.getElementById('downloadBtn');
+let pyodideReady = null;
+
+const PY_CODE = `
+import numpy as np
+import matplotlib
+matplotlib.use("AGG")
+import matplotlib.pyplot as plt
+import io, base64, json, math
+
+def _pole_from_strike_dip(strike, dip):
+    trend = (strike - 90) % 360
+    plunge = 90 - dip
+    return trend, plunge
+
+def _to_vector(trend, plunge):
+    tr, pl = math.radians(trend), math.radians(plunge)
+    n = math.cos(pl) * math.cos(tr)
+    e = math.cos(pl) * math.sin(tr)
+    d = math.sin(pl)
+    return np.array([n, e, d])
+
+def _vector_to_trend_plunge(v):
+    n, e, d = v
+    d = max(-1.0, min(1.0, d))
+    plunge = math.degrees(math.asin(d))
+    trend = math.degrees(math.atan2(e, n)) % 360
+    return trend, plunge
+
+def _project(trend, plunge, projection):
+    theta = math.radians(90 - plunge)
+    if projection == "equal-angle":
+        r = math.tan(theta / 2)
+    else:
+        r = math.sqrt(2) * math.sin(theta / 2)
+    az = math.radians(trend)
+    return r * math.sin(az), r * math.cos(az)
+
+def _great_circle_points(strike, dip, projection, n=361):
+    pole_trend, pole_plunge = _pole_from_strike_dip(strike, dip)
+    P = _to_vector(pole_trend, pole_plunge)
+    ref = np.array([0.0, 0.0, 1.0])
+    if abs(np.dot(P, ref)) > 0.999:
+        ref = np.array([1.0, 0.0, 0.0])
+    u = np.cross(P, ref); u = u / np.linalg.norm(u)
+    v = np.cross(P, u)
+    ts = np.linspace(0, 2*np.pi, n)
+    pts = np.array([math.cos(t)*u + math.sin(t)*v for t in ts])
+    d = pts[:, 2]
+    valid = d >= -1e-9
+    if not valid.all() and valid.any():
+        idx_false = np.where(~valid)[0]
+        start = (idx_false[-1] + 1) % n
+        order = (np.arange(n) + start) % n
+        pts = pts[order]; valid = valid[order]
+    pts = pts[valid]
+    xy = []
+    for p in pts:
+        trend, plunge = _vector_to_trend_plunge(p)
+        plunge = max(plunge, 0.0)
+        xy.append(_project(trend, plunge, projection))
+    return xy
+
+COLORS = {"Bedding":"#C06736","Joint":"#D9B23C","Fault":"#7A8FA6","Foliation":"#5C9683","Other":"#EDE6D6"}
+
+def plot_stereonet(entries_json, projection):
+    entries = json.loads(entries_json)
+    fig, ax = plt.subplots(figsize=(6.2, 6.2), dpi=150)
+    fig.patch.set_facecolor("#14120F")
+    ax.set_facecolor("#14120F")
+
+    ax.add_patch(plt.Circle((0,0), 1, fill=False, color="#EDE6D6", linewidth=1.3))
+
+    for plunge_ref in range(10, 90, 10):
+        theta = math.radians(90 - plunge_ref)
+        r = math.tan(theta/2) if projection == "equal-angle" else math.sqrt(2)*math.sin(theta/2)
+        ax.add_patch(plt.Circle((0,0), r, fill=False, color="#EDE6D6", linewidth=0.5, alpha=0.25))
+    for az in range(0, 360, 30):
+        rad = math.radians(az)
+        ax.plot([0, math.sin(rad)], [0, math.cos(rad)], color="#EDE6D6", linewidth=0.5, alpha=0.25)
+
+    for label, dx, dy in [("N",0,1.08),("E",1.08,0),("S",0,-1.14),("W",-1.14,0)]:
+        ax.text(dx, dy, label, color="#EDE6D6", fontsize=11, ha="center", va="center", family="monospace")
+
+    used = set()
+    for i, e in enumerate(entries):
+        strike = float(e["strike"]) % 360
+        dip = max(0.0, min(90.0, float(e["dip"])))
+        ftype = e.get("type","Other")
+        color = COLORS.get(ftype, "#EDE6D6")
+        label_text = e.get("label") or (ftype + " " + str(i+1))
+
+        if e.get("plane"):
+            pts = _great_circle_points(strike, dip, projection)
+            if pts:
+                xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+                key = label_text + " (plane)"
+                lbl = key if key not in used else None
+                ax.plot(xs, ys, color=color, linewidth=1.4, label=lbl)
+                if lbl: used.add(lbl)
+
+        if e.get("pole"):
+            pt, pp = _pole_from_strike_dip(strike, dip)
+            x, y = _project(pt, pp, projection)
+            key = label_text + " (pole)"
+            lbl = key if key not in used else None
+            ax.scatter([x],[y], color=color, edgecolor="#14120F", s=48, zorder=5, label=lbl)
+            if lbl: used.add(lbl)
+
+    ax.set_xlim(-1.35, 1.35); ax.set_ylim(-1.35, 1.35)
+    ax.set_aspect("equal"); ax.axis("off")
+
+    if used:
+        ax.legend(loc="upper left", bbox_to_anchor=(1.0,1.0), frameon=False, fontsize=8, labelcolor="#EDE6D6")
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", facecolor=fig.get_facecolor(), bbox_inches="tight")
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode("utf-8")
+`;
+
+async function initPyodide(){
+  statusEl.textContent = 'Loading Python runtime (Pyodide) — first load can take 10–20 seconds…';
+  const pyodide = await loadPyodide();
+  statusEl.textContent = 'Loading numpy + matplotlib…';
+  await pyodide.loadPackage(['numpy','matplotlib']);
+  pyodide.runPython(PY_CODE);
+  statusEl.textContent = 'Ready. Adjust planes on the left, then click "Plot stereonet".';
+  return pyodide;
+}
+pyodideReady = initPyodide().catch(err => {
+  statusEl.textContent = 'Failed to load Python runtime. Check your connection and reload.';
+  statusEl.classList.add('err');
+  console.error(err);
+});
+
+document.getElementById('plotBtn').addEventListener('click', async () => {
+  const entries = collectEntries();
+  if (entries.length === 0){
+    statusEl.textContent = 'Add at least one plane first.';
+    statusEl.classList.add('err');
+    return;
+  }
+  statusEl.classList.remove('err');
+  statusEl.textContent = 'Plotting…';
+  imgEl.style.display = 'none';
+  downloadBtn.style.display = 'none';
+
+  try{
+    const pyodide = await pyodideReady;
+    const projection = document.getElementById('projection').value;
+    const fn = pyodide.globals.get('plot_stereonet');
+    const b64 = fn(JSON.stringify(entries), projection);
+    imgEl.src = 'data:image/png;base64,' + b64;
+    imgEl.style.display = 'block';
+    downloadBtn.style.display = 'inline-flex';
+    statusEl.textContent = `Plotted ${entries.length} plane${entries.length>1?'s':''}.`;
+  } catch(err){
+    statusEl.textContent = 'Error while plotting — check strike/dip values.';
+    statusEl.classList.add('err');
+    console.error(err);
+  }
+});
+
+downloadBtn.addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = imgEl.src;
+  a.download = 'stereonet.png';
+  a.click();
+});
+</script>
+</body>
+</html>
