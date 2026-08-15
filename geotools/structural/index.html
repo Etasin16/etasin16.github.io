@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Structural Geology — Eaftada</title>
+<meta name="description" content="Tools and reference material for structural geology: strike & dip, stereonets, folds, and faults.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+  --max:1180px;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.65; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.wrap{ max-width:var(--max); margin:0 auto; padding:0 32px; }
+@media (max-width:640px){ .wrap{ padding:0 20px; } }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{ border-bottom:1px solid var(--hairline); padding:18px 0; }
+.header-inner{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+/* hero */
+.hero{ padding:64px 0 56px; border-bottom:1px solid var(--hairline); position:relative; overflow:hidden; }
+.hero-inner{ display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; }
+@media (max-width:860px){ .hero-inner{ grid-template-columns:1fr; } }
+.hero h1{ font-size:clamp(32px,4.6vw,50px); margin:12px 0 16px; }
+.hero p{ max-width:520px; color:var(--limestone-70); font-size:15.5px; }
+.hero__diagram{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:20px; }
+.hero__diagram svg{ width:100%; height:auto; display:block; }
+.hero__diagram figcaption{ font-family:var(--mono); font-size:11px; color:var(--limestone-45); margin-top:10px; text-align:center; }
+
+/* section scaffolding */
+.section{ padding:64px 0; border-bottom:1px solid var(--hairline); }
+.section__head{ margin-bottom:36px; max-width:640px; }
+.section__head h2{ font-size:clamp(24px,3vw,32px); margin:8px 0 12px; }
+.section__head p{ color:var(--limestone-70); font-size:14.5px; }
+
+/* concept grid */
+.concept-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:16px; }
+.concept-card{
+  display:block; background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:22px;
+  text-decoration:none; cursor:pointer;
+  transition:border-color .2s ease, transform .15s ease, background .2s ease;
+}
+.concept-card:hover{ border-color:var(--rust); transform:translateY(-3px); background:var(--basalt-3); }
+.concept-card__more{ display:block; margin-top:12px; font-family:var(--mono); font-size:11px; letter-spacing:.04em; color:var(--rust); }
+.concept-card svg{ width:100%; height:90px; margin-bottom:14px; }
+.concept-card h3{ font-size:16px; margin-bottom:8px; }
+.concept-card p{ font-size:13px; color:var(--limestone-70); }
+
+/* fold anatomy diagram block */
+.diagram-block{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+@media (max-width:860px){ .diagram-block{ grid-template-columns:1fr; } }
+.diagram-block figure{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; margin:0; }
+.diagram-block figure svg{ width:100%; height:auto; }
+.diagram-block figcaption{ font-family:var(--mono); font-size:11px; color:var(--limestone-45); margin-top:12px; text-align:center; }
+.diagram-block ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+.diagram-block li{ padding-left:16px; border-left:2px solid var(--rust); font-size:14px; color:var(--limestone-70); }
+.diagram-block li b{ color:var(--limestone); display:block; font-family:var(--display); font-size:15px; margin-bottom:2px; }
+
+/* tools */
+.discipline__head{ display:flex; align-items:baseline; gap:14px; margin-bottom:20px; }
+.discipline__count{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px; }
+.tool-card{
+  display:flex; flex-direction:column; gap:10px; background:var(--basalt-2); border:1px solid var(--hairline);
+  border-radius:7px; padding:22px; text-decoration:none; color:var(--limestone);
+  transition:border-color .2s ease, transform .15s ease, background .2s ease;
+}
+.tool-card:hover{ border-color:var(--rust); transform:translateY(-3px); background:var(--basalt-3); }
+.tool-card__top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.tool-card__name{ font-family:var(--display); font-weight:600; font-size:17px; }
+.tool-card__desc{ font-size:13.5px; color:var(--limestone-70); line-height:1.5; }
+.status{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
+.status--live{ background:var(--malachite); color:var(--basalt); }
+.status--soon{ background:none; border:1px solid var(--hairline-str); color:var(--limestone-45); }
+.tool-card__tag{ margin-top:auto; align-self:flex-start; font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--basalt); background:var(--rust); padding:4px 8px; border-radius:3px; }
+
+footer{ padding:32px 0; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <a href="/" class="brand">EAFTADA<span>.</span></a>
+    <span class="crumb"><a href="/">Home</a> / <a href="/geotoolbox/">Geotoolbox</a> / Structural Geology</span>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <span class="eyebrow">Geotoolbox · Structural Geology</span>
+      <h1>Structural Geology</h1>
+      <p>The study of how rocks deform — folded, fractured, tilted, and faulted by the stresses of tectonics. This section holds reference material and working tools for reading orientation data, folds, and faults in the field or from a map.</p>
+    </div>
+    <figure class="hero__diagram">
+      <svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg">
+        <!-- PLAN VIEW -->
+        <text x="20" y="24" fill="#EDE6D6" opacity="0.45" font-family="IBM Plex Mono" font-size="10">PLAN VIEW</text>
+
+        <!-- north arrow, pointing up -->
+        <line x1="340" y1="150" x2="340" y2="90" stroke="#EDE6D6" stroke-width="1.5"/>
+        <polygon points="340,80 334,94 346,94" fill="#EDE6D6"/>
+        <text x="340" y="72" fill="#EDE6D6" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">N</text>
+
+        <!-- strike & dip map symbol: strike is N-S (vertical line), dip direction is west (tick pointing left) -->
+        <line x1="150" y1="50" x2="150" y2="130" stroke="#D9B23C" stroke-width="2.2"/>
+        <text x="158" y="52" fill="#D9B23C" font-family="IBM Plex Mono" font-size="11">STRIKE (N–S)</text>
+        <line x1="150" y1="90" x2="112" y2="90" stroke="#C06736" stroke-width="2.2"/>
+        <text x="48" y="94" fill="#C06736" font-family="IBM Plex Mono" font-size="12">42°</text>
+        <text x="44" y="112" fill="#C06736" font-family="IBM Plex Mono" font-size="10">DIP → W</text>
+
+        <line x1="20" y1="150" x2="360" y2="150" stroke="#EDE6D6" stroke-opacity="0.15" stroke-width="1"/>
+
+        <!-- CROSS-SECTION: dip amount shown against a horizontal reference -->
+        <text x="20" y="172" fill="#EDE6D6" opacity="0.45" font-family="IBM Plex Mono" font-size="10">CROSS-SECTION (E–W, LOOKING NORTH)</text>
+
+        <line x1="50" y1="200" x2="340" y2="200" stroke="#EDE6D6" stroke-opacity="0.4" stroke-width="1.3" stroke-dasharray="5 4"/>
+        <text x="345" y="204" fill="#EDE6D6" opacity="0.5" font-family="IBM Plex Mono" font-size="10">E</text>
+
+        <line x1="190" y1="200" x2="90" y2="248" stroke="#C06736" stroke-width="2.2"/>
+        <polygon points="90,248 100,240 96,252" fill="#C06736"/>
+        <text x="58" y="255" fill="#EDE6D6" opacity="0.5" font-family="IBM Plex Mono" font-size="10">W</text>
+
+        <path d="M 168 200 A 22 22 0 0 1 170 210" fill="none" stroke="#EDE6D6" stroke-opacity="0.6" stroke-width="1"/>
+        <text x="176" y="224" fill="#EDE6D6" font-family="IBM Plex Mono" font-size="10">δ = 42°</text>
+      </svg>
+      <figcaption>Strike–dip symbol in plan view (north up) and the same dip angle measured against a horizontal reference in cross-section</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- CORE CONCEPTS -->
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="eyebrow">Reference</span>
+      <h2>Core concepts</h2>
+      <p>A quick refresher on the vocabulary the tools below build on.</p>
+    </div>
+
+    <div class="concept-grid">
+      <a class="concept-card" href="/structural/Strike-Dip/">
+        <svg viewBox="0 0 220 90"><polygon points="10,70 210,55 210,35 10,50" fill="none" stroke="#C06736" stroke-width="1.5"/><line x1="20" y1="48" x2="190" y2="37" stroke="#D9B23C" stroke-width="1.5"/></svg>
+        <h3>Strike &amp; Dip</h3>
+        <p>Strike is the compass bearing of a horizontal line on a planar surface; dip is the angle that surface plunges below horizontal, measured perpendicular to strike.</p>
+        <span class="concept-card__more">Explore Strike &amp; Dip →</span>
+      </a>
+      <a class="concept-card" href="/structural/Folds/">
+        <svg viewBox="0 0 220 90"><path d="M10,70 Q60,20 110,70 T210,70" fill="none" stroke="#C06736" stroke-width="1.5"/></svg>
+        <h3>Folds</h3>
+        <p>Ductile bending of layered rock. Anticlines arch upward with the oldest beds in the core; synclines sag downward with the youngest beds in the core.</p>
+        <span class="concept-card__more">Explore Folds (anticline, syncline, chevron…) →</span>
+      </a>
+      <a class="concept-card" href="/structural/Faults/">
+        <svg viewBox="0 0 220 100">
+          <defs>
+            <clipPath id="clipFootwall"><polygon points="0,0 100,0 150,100 0,100"/></clipPath>
+            <clipPath id="clipHanging"><polygon points="100,0 220,0 220,100 150,100"/></clipPath>
+          </defs>
+          <g clip-path="url(#clipFootwall)">
+            <rect x="0" y="12" width="220" height="14" fill="#C06736"/>
+            <rect x="0" y="32" width="220" height="14" fill="#D9B23C"/>
+            <rect x="0" y="52" width="220" height="14" fill="#5C9683"/>
+          </g>
+          <g clip-path="url(#clipHanging)">
+            <rect x="0" y="32" width="220" height="14" fill="#C06736"/>
+            <rect x="0" y="52" width="220" height="14" fill="#D9B23C"/>
+            <rect x="0" y="72" width="220" height="14" fill="#5C9683"/>
+          </g>
+          <line x1="100" y1="0" x2="150" y2="100" stroke="#EDE6D6" stroke-width="1.5"/>
+          <line x1="178" y1="18" x2="178" y2="34" stroke="#EDE6D6" stroke-width="1.3"/>
+          <polygon points="178,38 173,29 183,29" fill="#EDE6D6"/>
+        </svg>
+        <h3>Faults</h3>
+        <p>Fractures with measurable displacement. This example shows a normal fault: three continuous strata offset by the hanging wall dropping relative to the footwall.</p>
+        <span class="concept-card__more">Explore Faults (normal, reverse, strike-slip…) →</span>
+      </a>
+      <a class="concept-card" href="/structural/Stereonets/">
+        <svg viewBox="0 0 220 90"><circle cx="110" cy="45" r="30" fill="none" stroke="#C06736" stroke-width="1.5"/><line x1="80" y1="45" x2="140" y2="45" stroke="#EDE6D6" stroke-opacity="0.4" stroke-width="1"/><line x1="110" y1="15" x2="110" y2="75" stroke="#EDE6D6" stroke-opacity="0.4" stroke-width="1"/><circle cx="110" cy="45" r="4" fill="#D9B23C"/></svg>
+        <h3>Stereonets</h3>
+        <p>A lower-hemisphere projection used to plot lines and planes as points and curves, so 3D orientation data can be compared and analysed on paper.</p>
+        <span class="concept-card__more">Explore Stereonets →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOLD ANATOMY -->
+<section class="section">
+  <div class="wrap diagram-block">
+    <figure>
+      <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- three stacked strata: anticline (crest, x=100) and syncline (trough, x=280) sharing a limb -->
+        <path d="M10,140 Q100,45 190,140 Q280,225 380,140" fill="none" stroke="#C06736" stroke-width="2"/>
+        <path d="M10,154 Q100,59 190,154 Q280,239 380,154" fill="none" stroke="#EDE6D6" stroke-opacity="0.3" stroke-width="1.3"/>
+        <path d="M10,168 Q100,73 190,168 Q280,253 380,168" fill="none" stroke="#EDE6D6" stroke-opacity="0.18" stroke-width="1.3"/>
+
+        <!-- axial planes -->
+        <line x1="100" y1="35" x2="100" y2="175" stroke="#D9B23C" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+        <line x1="280" y1="140" x2="280" y2="270" stroke="#D9B23C" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+
+        <!-- hinges -->
+        <circle cx="100" cy="45" r="4" fill="#D9B23C"/>
+        <circle cx="280" cy="225" r="4" fill="#D9B23C"/>
+
+        <!-- inflection point -->
+        <circle cx="190" cy="140" r="3.5" fill="#EDE6D6"/>
+
+        <!-- labels -->
+        <text x="45" y="24" fill="#5C9683" font-family="IBM Plex Mono" font-size="11">ANTICLINE</text>
+        <text x="230" y="288" fill="#5C9683" font-family="IBM Plex Mono" font-size="11">SYNCLINE</text>
+
+        <text x="108" y="42" fill="#D9B23C" font-family="IBM Plex Mono" font-size="10">HINGE</text>
+        <text x="288" y="222" fill="#D9B23C" font-family="IBM Plex Mono" font-size="10">HINGE</text>
+
+        <text x="104" y="195" fill="#D9B23C" font-family="IBM Plex Mono" font-size="9" opacity="0.85">AXIAL PLANE</text>
+        <text x="284" y="160" fill="#D9B23C" font-family="IBM Plex Mono" font-size="9" opacity="0.85">AXIAL PLANE</text>
+
+        <text x="140" y="82" fill="#EDE6D6" opacity="0.75" font-family="IBM Plex Mono" font-size="10">LIMB</text>
+
+        <text x="196" y="152" fill="#EDE6D6" opacity="0.75" font-family="IBM Plex Mono" font-size="9">INFLECTION POINT</text>
+      </svg>
+      <figcaption>Anatomy of a fold pair — anticline and syncline sharing a limb, with hinges, axial planes, and the inflection point marked</figcaption>
+    </figure>
+    <div>
+      <span class="eyebrow">Reference</span>
+      <h2 style="font-size:26px; margin:8px 0 18px;">Anatomy of a fold</h2>
+      <ul>
+        <li><b>Hinge</b>Line of maximum curvature along the fold; where the axial plane intersects the folded surface.</li>
+        <li><b>Limb</b>The flank of a fold between two hinges, typically the most planar part.</li>
+        <li><b>Axial plane</b>The surface that divides a fold as symmetrically as possible, connecting hinge lines through the stack of folded layers.</li>
+        <li><b>Vergence</b>The direction a fold appears to lean or verge, used to infer the location of a larger structure like a fold nose or thrust front.</li>
+        <li><b>Inflection point</b>Where the folded surface crosses its own regional trend line, marking the boundary between one limb and the next.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="section" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="eyebrow">Geotoolbox</span>
+      <h2>Structural tools</h2>
+      <p>All run entirely in your browser — nothing you enter is uploaded anywhere.</p>
+    </div>
+
+    <div class="discipline__head"><span class="discipline__count">3 tools</span></div>
+    <div class="card-grid">
+      <a class="tool-card" href="/geotools/structural/stereonet/">
+        <div class="tool-card__top"><span class="tool-card__name">Stereonet Plotter</span><span class="status status--live">Live</span></div>
+        <span class="tool-card__desc">Plot strike/dip as poles and great circles on an equal-area or equal-angle stereonet.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" href="/geotools/structural/apparent-dip/">
+        <div class="tool-card__top"><span class="tool-card__name">Apparent ↔ True Dip</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Convert between apparent dip on a section and true dip of a plane.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+      <a class="tool-card" href="/geotools/structural/fold-vergence/">
+        <div class="tool-card__top"><span class="tool-card__name">Fold Vergence Identifier</span><span class="status status--soon">Soon</span></div>
+        <span class="tool-card__desc">Determine vergence direction from bedding and axial-plane orientation.</span>
+        <span class="tool-card__tag">In-browser Python</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  Tools run client-side via PyScript/Pyodide. No server, no tracking. Suggest a tool → <a href="mailto:e.tasin02@gmail.com" style="color:var(--ochre); text-decoration:none;">e.tasin02@gmail.com</a>
+</footer>
+
+</body>
+</html>
