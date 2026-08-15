@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<meta name="theme-color" content="#14120F" />
+<title>Fold Vergence Identifier — Eaftada</title>
+<meta name="description" content="Infer fold vergence and limb position from minor-fold asymmetry (S/Z/M) or from the bedding–cleavage angular relationship — runs entirely in your browser via PyScript.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+<script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{ border-bottom:1px solid var(--hairline); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:36px; max-width:700px; }
+.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
+.title-block p{ color:var(--limestone-70); font-size:15px; }
+
+.section{ margin-bottom:56px; padding-bottom:56px; border-bottom:1px solid var(--hairline); }
+.section:last-of-type{ border-bottom:none; }
+.section__head{ margin-bottom:24px; max-width:680px; }
+.section__head h2{ font-size:22px; margin:8px 0 10px; }
+.section__head p{ color:var(--limestone-70); font-size:14px; }
+
+.layout{ display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+@media (max-width:860px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
+.panel h3{ font-size:14px; margin-bottom:14px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--limestone-45); }
+
+/* pick cards (S/Z/M and way-up) */
+.pick-group{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:18px; }
+.pick-group.two-col{ grid-template-columns:repeat(2, 1fr); }
+.pick-card{
+  background:var(--basalt-3); border:1px solid var(--hairline-str); border-radius:6px; padding:14px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer;
+  transition:border-color .2s ease, background .2s ease;
+}
+.pick-card svg{ width:100%; height:44px; }
+.pick-card span{ font-family:var(--mono); font-size:11px; letter-spacing:.03em; color:var(--limestone-70); text-align:center; }
+.pick-card:hover{ border-color:var(--ochre); }
+.pick-card.is-active{ border-color:var(--rust); background:rgba(192,103,54,.12); }
+.pick-card.is-active span{ color:var(--limestone); }
+
+.field{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.field label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--limestone-45); }
+input, select{
+  background:var(--basalt-3); border:1px solid var(--hairline-str); color:var(--limestone);
+  border-radius:4px; padding:9px 10px; font-family:var(--mono); font-size:13px; width:100%;
+}
+input:focus, select:focus{ border-color:var(--ochre); outline:none; }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+.calib-note{
+  font-size:12px; color:var(--limestone-45); background:var(--basalt-3); border:1px solid var(--hairline);
+  border-radius:6px; padding:12px 14px; margin-bottom:16px; line-height:1.5;
+}
+.calib-toggle{ display:flex; gap:8px; margin-bottom:18px; }
+.calib-toggle button{
+  flex:1; font-family:var(--mono); font-size:11.5px; padding:9px; border-radius:5px; cursor:pointer;
+  border:1px solid var(--hairline-str); background:none; color:var(--limestone-70);
+}
+.calib-toggle button.is-active{ background:var(--limestone); color:var(--basalt); border-color:var(--limestone); font-weight:500; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:12px 18px; border-radius:5px;
+  cursor:pointer; border:1px solid var(--rust); background:var(--rust); color:var(--basalt); font-weight:500;
+  transition:background .2s ease;
+}
+.btn:hover{ background:#D3763F; }
+
+.result-box{
+  background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; min-height:100%;
+  display:flex; flex-direction:column; gap:16px;
+}
+.result-headline{ font-family:var(--display); font-size:22px; color:var(--ochre); }
+.result-body{ font-size:13.5px; color:var(--limestone-70); line-height:1.65; }
+.result-meta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:auto; }
+.chip{ font-family:var(--mono); font-size:11px; padding:6px 10px; border-radius:14px; background:var(--basalt-3); border:1px solid var(--hairline); color:var(--limestone-45); }
+
+#diagramB{ display:flex; align-items:center; justify-content:center; margin-top:6px; }
+#diagramB svg{ max-width:100%; height:auto; }
+
+.status{ font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); margin-top:10px; }
+.status.err{ color:var(--rust); }
+
+footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">EAFTADA<span>.</span></a>
+  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/structural/">Structural</a> / Fold Vergence Identifier</span>
+</header>
+
+<main>
+  <div class="title-block">
+    <span class="eyebrow">Structural Geology · Runs entirely in your browser · PyScript</span>
+    <h1>Fold Vergence Identifier</h1>
+    <p>Two independent ways to work out where you stand on a fold: the classic field method using minor-fold asymmetry (S/Z/M), and a quantitative check using the angle between bedding and axial-planar cleavage. Use either on its own, or both together for more confidence.</p>
+  </div>
+
+  <!-- SECTION A: S/Z/M method -->
+  <section class="section">
+    <div class="section__head">
+      <span class="eyebrow">Method 1</span>
+      <h2>Minor-fold asymmetry (S / Z / M)</h2>
+      <p>This method needs calibrating first — the direction a Z-fold "points" relative to the nearest major hinge is a local convention, not a universal rule. Set it once from a known exposure, then classify new stations against it.</p>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <h3>Step 1 — Calibrate</h3>
+        <div class="calib-note">At a location where you already know you're on the limb approaching an <b style="color:var(--limestone)">anticline</b> hinge (right-way-up beds), which shape do the minor folds show, looking down-plunge?</div>
+        <div class="calib-toggle">
+          <button id="calib-z" class="is-active">Z-folds → anticline</button>
+          <button id="calib-s">S-folds → anticline</button>
+        </div>
+
+        <h3>Step 2 — Classify your station</h3>
+        <div class="field"><label>Observed minor-fold shape</label></div>
+        <div class="pick-group" id="shapePicks">
+          <div class="pick-card is-active" data-shape="Z">
+            <svg viewBox="0 0 60 40"><path d="M12,32 Q12,20 30,20 Q48,20 48,8" fill="none" stroke="#C06736" stroke-width="2.5"/></svg>
+            <span>Z-shape</span>
+          </div>
+          <div class="pick-card" data-shape="S">
+            <svg viewBox="0 0 60 40"><path d="M48,32 Q48,20 30,20 Q12,20 12,8" fill="none" stroke="#5C9683" stroke-width="2.5"/></svg>
+            <span>S-shape</span>
+          </div>
+          <div class="pick-card" data-shape="M">
+            <svg viewBox="0 0 60 40"><path d="M8,30 Q20,10 30,22 Q40,10 52,30" fill="none" stroke="#D9B23C" stroke-width="2.5"/></svg>
+            <span>M / W (symmetric)</span>
+          </div>
+        </div>
+
+        <div class="field"><label>Way-up (younging)</label></div>
+        <div class="pick-group two-col" id="wayupPicks">
+          <div class="pick-card is-active" data-wayup="normal">
+            <svg viewBox="0 0 60 40"><line x1="30" y1="34" x2="30" y2="8" stroke="#EDE6D6" stroke-width="2"/><polygon points="30,4 24,14 36,14" fill="#EDE6D6"/></svg>
+            <span>Normal (right-way-up)</span>
+          </div>
+          <div class="pick-card" data-wayup="overturned">
+            <svg viewBox="0 0 60 40"><line x1="30" y1="6" x2="30" y2="32" stroke="#EDE6D6" stroke-width="2"/><polygon points="30,36 24,26 36,26" fill="#EDE6D6"/></svg>
+            <span>Overturned</span>
+          </div>
+        </div>
+
+        <button class="btn" id="classifyBtn" style="margin-top:8px;">Classify station</button>
+      </div>
+
+      <div class="result-box" id="resultA">
+        <div class="result-headline">Set your calibration, then classify a station.</div>
+        <div class="result-body">Results will appear here.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION B: bedding-cleavage relationship -->
+  <section class="section">
+    <div class="section__head">
+      <span class="eyebrow">Method 2</span>
+      <h2>Bedding–cleavage relationship</h2>
+      <p>Where axial-planar cleavage and bedding dip in roughly the same direction, their relative steepness is diagnostic: cleavage steeper than bedding indicates the anticline limb; bedding steeper than cleavage indicates the syncline limb. This also computes the bedding–cleavage intersection lineation, a common proxy for the local fold axis.</p>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <h3>Bedding (S₀)</h3>
+        <div class="field-row">
+          <div class="field"><label>Strike (°)</label><input type="number" id="bed-strike" value="100" min="0" max="360"></div>
+          <div class="field"><label>Dip (°)</label><input type="number" id="bed-dip" value="55" min="0" max="90"></div>
+        </div>
+        <h3 style="margin-top:18px;">Cleavage (S₁, axial planar)</h3>
+        <div class="field-row">
+          <div class="field"><label>Strike (°)</label><input type="number" id="cl-strike" value="95" min="0" max="360"></div>
+          <div class="field"><label>Dip (°)</label><input type="number" id="cl-dip" value="70" min="0" max="90"></div>
+        </div>
+        <button class="btn" id="computeBBtn" style="margin-top:8px;">Compute relationship</button>
+        <div class="status" id="statusB">Ready.</div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-headline" id="headlineB">Enter bedding and cleavage attitudes.</div>
+        <div class="result-body" id="bodyB">Results will appear here.</div>
+        <div class="result-meta" id="metaB"></div>
+        <div id="diagramB"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Runs client-side via PyScript (Pyodide). No server, no data leaves your browser. This tool complements, but doesn't replace, direct field observation of way-up and fold hinges.
+</footer>
+
+<script type="py">
+import math
+from pyscript import document, when
+
+# ---------- shared vector helpers ----------
+def to_vec(trend, plunge):
+    tr, pl = math.radians(trend), math.radians(plunge)
+    n = math.cos(pl) * math.cos(tr)
+    e = math.cos(pl) * math.sin(tr)
+    d = math.sin(pl)
+    return (n, e, d)
+
+def vec_to_trend_plunge(v):
+    n, e, d = v
+    d = max(-1.0, min(1.0, d))
+    plunge = math.degrees(math.asin(d))
+    trend = math.degrees(math.atan2(e, n)) % 360
+    return trend, plunge
+
+def cross(a, b):
+    return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+
+def dot(a, b):
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+
+def norm(v):
+    m = math.sqrt(sum(c*c for c in v))
+    return tuple(c/m for c in v) if m > 0 else v
+
+def pole_from_strike_dip(strike, dip):
+    trend = (strike - 90) % 360
+    plunge = 90 - dip
+    return trend, plunge
+
+def acute_angle(az1, az2):
+    diff = abs(az1 - az2) % 360
+    if diff > 180: diff = 360 - diff
+    return diff
+
+def compass_svg(lines, size=240):
+    cx = cy = size / 2
+    r = size / 2 - 44
+    parts = [f'<svg viewBox="0 0 {size} {size}" xmlns="http://www.w3.org/2000/svg">']
+    parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#EDE6D6" stroke-opacity="0.25"/>')
+    parts.append(f'<text x="{cx}" y="{cy-r-12}" fill="#EDE6D6" font-family="IBM Plex Mono" font-size="11" text-anchor="middle">N</text>')
+    for az, color, label, dashed in lines:
+        rad = math.radians(az)
+        x1 = cx + r*math.sin(rad); y1 = cy - r*math.cos(rad)
+        x2 = cx - r*math.sin(rad); y2 = cy + r*math.cos(rad)
+        dash_attr = ' stroke-dasharray="5 4"' if dashed else ''
+        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{color}" stroke-width="2"{dash_attr}/>')
+        lx = cx + (r+20)*math.sin(rad); ly = cy - (r+20)*math.cos(rad)
+        parts.append(f'<text x="{lx:.1f}" y="{ly:.1f}" fill="{color}" font-family="IBM Plex Mono" font-size="9.5" text-anchor="middle">{label}</text>')
+    parts.append('</svg>')
+    return ''.join(parts)
+
+def set_status(el_id, msg, is_err=False):
+    el = document.getElementById(el_id)
+    el.innerText = msg
+    el.className = "status err" if is_err else "status"
+
+# ---------- SECTION A: S/Z/M classifier ----------
+state = {"calib": "Z", "shape": "Z", "wayup": "normal"}
+
+@when("click", "#calib-z")
+def set_calib_z(event):
+    state["calib"] = "Z"
+    document.getElementById("calib-z").classList.add("is-active")
+    document.getElementById("calib-s").classList.remove("is-active")
+
+@when("click", "#calib-s")
+def set_calib_s(event):
+    state["calib"] = "S"
+    document.getElementById("calib-s").classList.add("is-active")
+    document.getElementById("calib-z").classList.remove("is-active")
+
+@when("click", "#shapePicks .pick-card")
+def pick_shape(event):
+    for el in document.querySelectorAll("#shapePicks .pick-card"):
+        el.classList.remove("is-active")
+    card = event.currentTarget
+    card.classList.add("is-active")
+    state["shape"] = card.getAttribute("data-shape")
+
+@when("click", "#wayupPicks .pick-card")
+def pick_wayup(event):
+    for el in document.querySelectorAll("#wayupPicks .pick-card"):
+        el.classList.remove("is-active")
+    card = event.currentTarget
+    card.classList.add("is-active")
+    state["wayup"] = card.getAttribute("data-wayup")
+
+@when("click", "#classifyBtn")
+def classify(event):
+    box = document.getElementById("resultA")
+    calib, shape, wayup = state["calib"], state["shape"], state["wayup"]
+
+    # which shape indicates "toward anticline" under this calibration
+    anticline_shape = calib
+    syncline_shape = "S" if calib == "Z" else "Z"
+
+    if shape == "M":
+        near = "at or very near a fold hinge"
+        which = "either an anticline or a syncline"
+        detail = "M/W (symmetric) minor folds indicate you're close to a major hinge, not clearly on one limb — the fold could be either type without more context (e.g. lithology repetition or a way-up check right at the hinge)."
+    elif shape == anticline_shape:
+        near = "approaching an anticline hinge"
+        which = "anticline"
+        detail = f"Under your calibration, {shape}-folds indicate the anticline limb."
+    else:
+        near = "approaching a syncline hinge"
+        which = "syncline"
+        detail = f"Under your calibration, {shape}-folds indicate the syncline limb."
+
+    if wayup == "overturned" and shape != "M":
+        flip = "syncline" if which == "anticline" else "anticline"
+        detail += f" However, your beds are overturned — on an overturned limb the stratigraphic and structural facing directions are opposite, so the structure you are actually walking toward is more likely a {flip}. Treat this as a flag to check way-up carefully."
+
+    headline = f"Likely {near}" if shape != "M" else "Likely near a hinge (either fold type)"
+
+    box.innerHTML = f'''
+      <div class="result-headline">{headline}</div>
+      <div class="result-body">{detail}</div>
+      <div class="result-meta">
+        <span class="chip">Calibration: {calib}-folds → anticline</span>
+        <span class="chip">Observed: {shape}-shape</span>
+        <span class="chip">Way-up: {wayup}</span>
+      </div>
+    '''
+
+# ---------- SECTION B: bedding-cleavage relationship ----------
+@when("click", "#computeBBtn")
+def compute_b(event):
+    try:
+        bed_strike = float(document.getElementById("bed-strike").value) % 360
+        bed_dip = max(0.0, min(90.0, float(document.getElementById("bed-dip").value)))
+        cl_strike = float(document.getElementById("cl-strike").value) % 360
+        cl_dip = max(0.0, min(90.0, float(document.getElementById("cl-dip").value)))
+
+        bed_pole_tp = pole_from_strike_dip(bed_strike, bed_dip)
+        cl_pole_tp = pole_from_strike_dip(cl_strike, cl_dip)
+        P_bed = to_vec(*bed_pole_tp)
+        P_cl = to_vec(*cl_pole_tp)
+
+        # acute dihedral angle between the two planes
+        cosang = max(-1.0, min(1.0, dot(P_bed, P_cl)))
+        ang = math.degrees(math.acos(cosang))
+        if ang > 90: ang = 180 - ang
+
+        # intersection lineation (bedding ∩ cleavage), lower hemisphere
+        L = norm(cross(P_bed, P_cl))
+        if L[2] < 0:
+            L = tuple(-c for c in L)
+        L_trend, L_plunge = vec_to_trend_plunge(L)
+
+        bed_dipdir = (bed_strike + 90) % 360
+        cl_dipdir = (cl_strike + 90) % 360
+        dir_diff = acute_angle(bed_dipdir, cl_dipdir)
+
+        if dir_diff <= 45:
+            if cl_dip > bed_dip + 1:
+                verdict = "Likely the anticline limb"
+                explain = f"Cleavage ({cl_dip:.0f}°) is steeper than bedding ({bed_dip:.0f}°), dipping the same general direction — the classic anticline-limb relationship for axial-planar cleavage fanning."
+            elif bed_dip > cl_dip + 1:
+                verdict = "Likely the syncline limb"
+                explain = f"Bedding ({bed_dip:.0f}°) is steeper than cleavage ({cl_dip:.0f}°), dipping the same general direction — the classic syncline-limb relationship."
+            else:
+                verdict = "Inconclusive — dips are essentially equal"
+                explain = "Bedding and cleavage dip by nearly the same amount, so this relationship doesn't distinguish a limb here. Try the S/Z/M method instead."
+        elif dir_diff >= 135:
+            verdict = "Bedding and cleavage dip in near-opposite directions"
+            explain = "This pattern falls outside the simple fanning-cleavage rule — it can indicate you're very close to a hinge, or that the cleavage isn't purely axial planar here. Use the S/Z/M method or check for a second cleavage."
+        else:
+            verdict = "Dip directions differ too much to apply this rule"
+            explain = f"Bedding and cleavage dip directions are {dir_diff:.0f}° apart — this method needs them within about 45° of each other. Use the S/Z/M method instead."
+
+        document.getElementById("headlineB").innerText = verdict
+        document.getElementById("bodyB").innerText = explain
+        document.getElementById("metaB").innerHTML = (
+            f'<span class="chip">Bedding–cleavage angle: {ang:.1f}°</span>'
+            f'<span class="chip">Intersection lineation: {L_trend:.0f}° / {L_plunge:.0f}°</span>'
+        )
+        document.getElementById("diagramB").innerHTML = compass_svg([
+            (bed_strike, "#D9B23C", "S0 STRIKE", False),
+            (bed_strike+180, "#D9B23C", "", False),
+            (bed_dipdir, "#5C9683", f"S0 DIP {bed_dip:.0f}°", False),
+            (cl_strike, "#7A8FA6", "S1 STRIKE", True),
+            (cl_strike+180, "#7A8FA6", "", True),
+            (cl_dipdir, "#C06736", f"S1 DIP {cl_dip:.0f}°", True),
+        ])
+        set_status("statusB", f"Computed. Bedding–cleavage angle {ang:.1f}°, intersection lineation {L_trend:.0f}°/{L_plunge:.0f}°.")
+    except Exception as e:
+        set_status("statusB", f"Check your inputs — {e}", is_err=True)
+
+# run once on load
+compute_b(None)
+</script>
+
+</body>
+</html>
