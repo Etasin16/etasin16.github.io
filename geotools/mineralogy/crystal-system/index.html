@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<meta name="theme-color" content="#14120F" />
+<title>Crystal System Identifier — Eaftada</title>
+<meta name="description" content="Identify one of the seven crystal systems from axial lengths and interaxial angles — runs entirely in your browser via PyScript.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+<script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{ border-bottom:1px solid var(--hairline); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:32px; max-width:700px; }
+.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
+.title-block p{ color:var(--limestone-70); font-size:15px; }
+
+.layout{ display:grid; grid-template-columns:420px 1fr; gap:28px; align-items:start; }
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
+.panel h3{ font-size:13px; margin-bottom:14px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--limestone-45); }
+
+.pick-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:22px; }
+.pick-row{
+  background:var(--basalt-3); border:1px solid var(--hairline-str); border-radius:6px; padding:12px 14px;
+  cursor:pointer; transition:border-color .2s ease, background .2s ease;
+}
+.pick-row:hover{ border-color:var(--ochre); }
+.pick-row.is-active{ border-color:var(--rust); background:rgba(192,103,54,.12); }
+.pick-row b{ font-family:var(--display); font-size:14.5px; display:block; }
+.pick-row span{ font-family:var(--mono); font-size:11px; color:var(--limestone-45); }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:12px 18px; border-radius:5px;
+  cursor:pointer; border:1px solid var(--rust); background:var(--rust); color:var(--basalt); font-weight:500;
+  transition:background .2s ease;
+}
+.btn:hover{ background:#D3763F; }
+
+.result-box{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:32px; min-height:520px; }
+.result-top{ display:flex; gap:28px; align-items:flex-start; flex-wrap:wrap; margin-bottom:22px; }
+#cellIcon svg{ width:180px; height:auto; flex-shrink:0; }
+.result-headline{ font-family:var(--display); font-size:28px; color:var(--ochre); margin-bottom:6px; }
+.result-sub{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.result-body{ font-size:13.5px; color:var(--limestone-70); line-height:1.65; margin-bottom:18px; }
+.mineral-list{ display:flex; flex-wrap:wrap; gap:8px; }
+.mineral-chip{ font-family:var(--mono); font-size:12px; padding:7px 12px; border-radius:16px; background:var(--basalt-3); border:1px solid var(--hairline-str); }
+
+footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">EAFTADA<span>.</span></a>
+  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/mineralogy/">Mineralogy</a> / Crystal System Identifier</span>
+</header>
+
+<main>
+  <div class="title-block">
+    <span class="eyebrow">Mineralogy · Runs entirely in your browser · PyScript</span>
+    <h1>Crystal System Identifier</h1>
+    <p>Pick the axial-length relationship and the interaxial-angle relationship you observe (or already know from crystallographic data), and get the matching crystal system, its symmetry, and example minerals.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Axial lengths</h3>
+      <div class="pick-list" id="lengthPicks">
+        <div class="pick-row is-active" data-val="eee"><b>a = b = c</b><span>all three axes equal</span></div>
+        <div class="pick-row" data-val="eeu"><b>a = b ≠ c</b><span>two axes equal, one different</span></div>
+        <div class="pick-row" data-val="uuu"><b>a ≠ b ≠ c</b><span>all three axes different</span></div>
+      </div>
+
+      <h3>Interaxial angles</h3>
+      <div class="pick-list" id="anglePicks">
+        <div class="pick-row is-active" data-val="all90"><b>α = β = γ = 90°</b><span>all right angles</span></div>
+        <div class="pick-row" data-val="hex"><b>α = β = 90°, γ = 120°</b><span>hexagonal setting</span></div>
+        <div class="pick-row" data-val="rhomb"><b>α = β = γ ≠ 90°</b><span>all equal, none 90° (rhombohedral)</span></div>
+        <div class="pick-row" data-val="mono"><b>α = γ = 90°, β ≠ 90°</b><span>one oblique angle</span></div>
+        <div class="pick-row" data-val="tri"><b>α ≠ β ≠ γ, none 90°</b><span>all different, none 90°</span></div>
+      </div>
+
+      <button class="btn" id="identifyBtn">Identify system</button>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-top">
+        <div id="cellIcon"></div>
+        <div>
+          <div class="result-headline">Select lengths &amp; angles</div>
+          <div class="result-sub">then click Identify system</div>
+        </div>
+      </div>
+      <div class="result-body" id="resultBody">The seven crystal systems are distinguished entirely by the relative lengths of, and angles between, their three (or four, for hexagonal) crystallographic axes.</div>
+      <div class="mineral-list" id="mineralList"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Runs client-side via PyScript (Pyodide). No server, no data leaves your browser.
+</footer>
+
+<script type="py">
+from pyscript import document, when
+
+SYSTEMS = {
+    "isometric": {
+        "name": "Isometric (Cubic)",
+        "symmetry": "Highest symmetry of any system — four 3-fold axes along the cube diagonals.",
+        "minerals": ["Halite", "Pyrite", "Galena", "Garnet", "Diamond"],
+        "icon": "cube",
+    },
+    "tetragonal": {
+        "name": "Tetragonal",
+        "symmetry": "One 4-fold (or 4-bar) axis; a cube stretched or compressed along c.",
+        "minerals": ["Zircon", "Rutile", "Chalcopyrite", "Scapolite"],
+        "icon": "tetra",
+    },
+    "orthorhombic": {
+        "name": "Orthorhombic",
+        "symmetry": "Three mutually perpendicular 2-fold axes, all of different length.",
+        "minerals": ["Olivine", "Topaz", "Sulfur", "Barite", "Andalusite"],
+        "icon": "ortho",
+    },
+    "hexagonal": {
+        "name": "Hexagonal",
+        "symmetry": "One 6-fold axis; four axes total, three equal a-axes at 120° plus c.",
+        "minerals": ["Beryl", "Apatite", "Graphite"],
+        "icon": "hex",
+    },
+    "trigonal": {
+        "name": "Trigonal",
+        "symmetry": "One 3-fold axis; often described on hexagonal axes, but true symmetry is 3-fold (rhombohedral in this axial setting).",
+        "minerals": ["Quartz", "Calcite", "Tourmaline", "Corundum", "Hematite"],
+        "icon": "trig",
+    },
+    "monoclinic": {
+        "name": "Monoclinic",
+        "symmetry": "One 2-fold axis or mirror plane; the least symmetric system after triclinic.",
+        "minerals": ["Gypsum", "Orthoclase", "Muscovite", "Augite"],
+        "icon": "mono",
+    },
+    "triclinic": {
+        "name": "Triclinic",
+        "symmetry": "No symmetry beyond a center of inversion (in most cases) — all axes and angles independent.",
+        "minerals": ["Plagioclase (Albite/Anorthite)", "Microcline", "Kyanite", "Rhodonite"],
+        "icon": "tri3",
+    },
+}
+
+MAP = {
+    ("eee", "all90"): "isometric",
+    ("eeu", "all90"): "tetragonal",
+    ("uuu", "all90"): "orthorhombic",
+    ("eeu", "hex"): "hexagonal",
+    ("eee", "rhomb"): "trigonal",
+    ("uuu", "mono"): "monoclinic",
+    ("uuu", "tri"): "triclinic",
+}
+
+def cell_icon(kind, color="#C06736"):
+    s = f'stroke="{color}" stroke-width="1.6" fill="none"'
+    if kind == "cube":
+        svg = f'''<polygon points="40,40 110,40 110,110 40,110" {s}/>
+        <polygon points="60,20 130,20 130,90 60,90" {s} opacity="0.5"/>
+        <line x1="40" y1="40" x2="60" y2="20" {s}/><line x1="110" y1="40" x2="130" y2="20" {s}/>
+        <line x1="110" y1="110" x2="130" y2="90" {s}/><line x1="40" y1="110" x2="60" y2="90" {s}/>'''
+    elif kind == "tetra":
+        svg = f'''<polygon points="45,30 105,30 105,140 45,140" {s}/>
+        <polygon points="65,12 125,12 125,122 65,122" {s} opacity="0.5"/>
+        <line x1="45" y1="30" x2="65" y2="12" {s}/><line x1="105" y1="30" x2="125" y2="12" {s}/>
+        <line x1="105" y1="140" x2="125" y2="122" {s}/><line x1="45" y1="140" x2="65" y2="122" {s}/>'''
+    elif kind == "ortho":
+        svg = f'''<polygon points="35,45 120,45 120,105 35,105" {s}/>
+        <polygon points="55,25 140,25 140,85 55,85" {s} opacity="0.5"/>
+        <line x1="35" y1="45" x2="55" y2="25" {s}/><line x1="120" y1="45" x2="140" y2="25" {s}/>
+        <line x1="120" y1="105" x2="140" y2="85" {s}/><line x1="35" y1="105" x2="55" y2="85" {s}/>'''
+    elif kind == "hex":
+        pts = "90,20 140,45 140,95 90,120 40,95 40,45"
+        svg = f'<polygon points="{pts}" {s}/><polygon points="{pts}" {s} opacity="0.5" transform="translate(0,-18)"/>' \
+              f'<line x1="90" y1="20" x2="90" y2="2" {s}/><line x1="140" y1="45" x2="140" y2="27" {s}/>' \
+              f'<line x1="40" y1="45" x2="40" y2="27" {s}/>'
+    elif kind == "trig":
+        svg = f'''<polygon points="45,90 95,35 145,90 95,140" {s}/>
+        <line x1="45" y1="90" x2="70" y2="55" {s} opacity="0.5"/>
+        <line x1="145" y1="90" x2="170" y2="55" {s} opacity="0.5"/>
+        <line x1="95" y1="140" x2="120" y2="105" {s} opacity="0.5"/>'''
+    elif kind == "mono":
+        svg = f'''<polygon points="40,45 110,45 130,110 60,110" {s}/>
+        <polygon points="55,20 125,20 145,85 75,85" {s} opacity="0.5"/>
+        <line x1="40" y1="45" x2="55" y2="20" {s}/><line x1="110" y1="45" x2="125" y2="20" {s}/>
+        <line x1="130" y1="110" x2="145" y2="85" {s}/><line x1="60" y1="110" x2="75" y2="85" {s}/>'''
+    else:  # tri3
+        svg = f'''<polygon points="35,50 105,40 130,105 55,120" {s}/>
+        <polygon points="55,22 125,15 150,75 78,88" {s} opacity="0.5"/>
+        <line x1="35" y1="50" x2="55" y2="22" {s}/><line x1="105" y1="40" x2="125" y2="15" {s}/>
+        <line x1="130" y1="105" x2="150" y2="75" {s}/><line x1="55" y1="120" x2="78" y2="88" {s}/>'''
+    return f'<svg viewBox="0 0 180 160" xmlns="http://www.w3.org/2000/svg">{svg}</svg>'
+
+state = {"length": "eee", "angle": "all90"}
+
+@when("click", "#lengthPicks .pick-row")
+def pick_length(event):
+    for el in document.querySelectorAll("#lengthPicks .pick-row"):
+        el.classList.remove("is-active")
+    row = event.currentTarget
+    row.classList.add("is-active")
+    state["length"] = row.getAttribute("data-val")
+
+@when("click", "#anglePicks .pick-row")
+def pick_angle(event):
+    for el in document.querySelectorAll("#anglePicks .pick-row"):
+        el.classList.remove("is-active")
+    row = event.currentTarget
+    row.classList.add("is-active")
+    state["angle"] = row.getAttribute("data-val")
+
+@when("click", "#identifyBtn")
+def identify(event):
+    key = (state["length"], state["angle"])
+    sys_id = MAP.get(key)
+
+    if sys_id is None:
+        document.getElementById("cellIcon").innerHTML = ""
+        document.querySelector("#resultBox .result-headline").innerText = "No standard match"
+        document.querySelector("#resultBox .result-sub").innerText = "that combination isn't one of the seven systems"
+        document.getElementById("resultBody").innerText = (
+            "That combination of axial lengths and angles doesn't correspond to a standard crystal system. "
+            "Double-check your angle observation — in particular, equal-but-non-90° angles only pair validly with equal axial lengths (trigonal/rhombohedral)."
+        )
+        document.getElementById("mineralList").innerHTML = ""
+        return
+
+    sysinfo = SYSTEMS[sys_id]
+    document.getElementById("cellIcon").innerHTML = cell_icon(sysinfo["icon"])
+    document.querySelector("#resultBox .result-headline").innerText = sysinfo["name"]
+    document.querySelector("#resultBox .result-sub").innerText = "one of the seven crystal systems"
+    document.getElementById("resultBody").innerText = sysinfo["symmetry"]
+    document.getElementById("mineralList").innerHTML = "".join(
+        f'<span class="mineral-chip">{m}</span>' for m in sysinfo["minerals"]
+    )
+
+identify(None)
+</script>
+
+</body>
+</html>
