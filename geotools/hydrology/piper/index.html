@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<meta name="theme-color" content="#14120F" />
+<title>Piper Diagram Generator — Eaftada</title>
+<meta name="description" content="Classify groundwater facies from major-ion chemistry with cation/anion trilinear triangles and a combined diamond plot — runs entirely in your browser via PyScript.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+<script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{ border-bottom:1px solid var(--hairline); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:32px; max-width:720px; }
+.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
+.title-block p{ color:var(--limestone-70); font-size:15px; }
+
+.layout{ display:grid; grid-template-columns:320px 1fr; gap:28px; align-items:start; }
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
+.panel h3{ font-size:12.5px; margin-bottom:12px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--limestone-45); }
+.field{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.field label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.03em; color:var(--limestone-45); }
+input{
+  background:var(--basalt-3); border:1px solid var(--hairline-str); color:var(--limestone);
+  border-radius:4px; padding:8px 9px; font-family:var(--mono); font-size:12.5px; width:100%;
+}
+input:focus{ border-color:var(--ochre); outline:none; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:12px 18px; border-radius:5px;
+  cursor:pointer; border:1px solid var(--rust); background:var(--rust); color:var(--basalt); font-weight:500;
+  margin-top:8px; transition:background .2s ease;
+}
+.btn:hover{ background:#D3763F; }
+.status{ font-family:var(--mono); font-size:11px; color:var(--limestone-45); margin-top:10px; }
+.status.err{ color:var(--rust); }
+
+.result-panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:28px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+.result-headline{ font-family:var(--display); font-size:24px; color:var(--ochre); text-align:center; }
+#piperDiagram svg{ max-width:100%; height:auto; }
+.meq-table{ width:100%; font-size:12px; border-collapse:collapse; }
+.meq-table th, .meq-table td{ padding:6px 8px; border-bottom:1px solid var(--hairline); text-align:left; }
+.meq-table td.num{ font-family:var(--mono); text-align:right; }
+
+footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">EAFTADA<span>.COM</span></a>
+  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/hydrology/">Hydrology</a> / Piper Diagram Generator</span>
+</header>
+
+<main>
+  <div class="title-block">
+    <span class="eyebrow">Hydrology · Runs entirely in your browser · PyScript</span>
+    <h1>Piper Diagram Generator</h1>
+    <p>Enter major-ion concentrations to plot cation and anion trilinear triangles plus a combined diamond field, and get a rule-based hydrochemical facies classification.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Concentrations (mg/L)</h3>
+      <div class="field"><label>Ca²⁺</label><input type="number" id="ion-Ca" value="65" step="0.1"></div>
+      <div class="field"><label>Mg²⁺</label><input type="number" id="ion-Mg" value="20" step="0.1"></div>
+      <div class="field"><label>Na⁺</label><input type="number" id="ion-Na" value="35" step="0.1"></div>
+      <div class="field"><label>K⁺</label><input type="number" id="ion-K" value="4" step="0.1"></div>
+      <div class="field"><label>HCO3⁻</label><input type="number" id="ion-HCO3" value="220" step="0.1"></div>
+      <div class="field"><label>CO3²⁻</label><input type="number" id="ion-CO3" value="0" step="0.1"></div>
+      <div class="field"><label>SO4²⁻</label><input type="number" id="ion-SO4" value="40" step="0.1"></div>
+      <div class="field"><label>Cl⁻</label><input type="number" id="ion-Cl" value="30" step="0.1"></div>
+      <button class="btn" id="plotBtn">Plot &amp; classify</button>
+      <div class="status" id="status">Ready.</div>
+    </div>
+
+    <div class="result-panel">
+      <div class="result-headline" id="headline">Calcium–Bicarbonate type water</div>
+      <div id="piperDiagram"></div>
+      <table class="meq-table" id="meqTable"></table>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Runs client-side via PyScript (Pyodide). No server, no data leaves your browser. Facies classification uses the standard &gt;50% dominant-ion rule; the diamond plot is a clearly-labeled combined-composition projection rather than a pixel replica of the original 1944 diagram.
+</footer>
+
+<script type="py">
+import math
+from pyscript import document, when
+
+EQ_WEIGHT = {"Ca": 20.04, "Mg": 12.153, "Na": 22.99, "K": 39.10, "HCO3": 61.02, "CO3": 30.005, "SO4": 48.03, "Cl": 35.45}
+
+def bary(qf, ff, lf, Q, F, L):
+    x = qf*Q[0] + ff*F[0] + lf*L[0]
+    y = qf*Q[1] + ff*F[1] + lf*L[1]
+    return x, y
+
+def triangle(cx, top, left, right, s):
+    h = s*math.sqrt(3)/2
+    Q = (cx, top)
+    F = (cx - s/2, top + h)
+    L = (cx + s/2, top + h)
+    return Q, F, L
+
+def piper_svg(ca, mg, nak, hco3, so4, cl, size_w=760, size_h=520):
+    s = 220
+    catQ, catF, catL = triangle(180, 40, None, None, s)   # apex Mg, left Ca, right NaK
+    catQ, catF, catL = ( (180,40), (180-s/2, 40+s*math.sqrt(3)/2), (180+s/2, 40+s*math.sqrt(3)/2) )
+    anQ, anF, anL = ( (580,40), (580-s/2, 40+s*math.sqrt(3)/2), (580+s/2, 40+s*math.sqrt(3)/2) )
+
+    cat_pt = bary(mg/100, ca/100, nak/100, catQ, catF, catL)
+    an_pt = bary(hco3/100, cl/100, so4/100, anQ, anF, anL)
+
+    # diamond: self-consistent rotated-square combining NaK% (cation) and (SO4+Cl)% (anion)
+    u = nak/100
+    v = (so4+cl)/100
+    dcx, dcy = 380, 40 + s*math.sqrt(3)/2 + 40
+    dr = 110
+    dx = (u - v) * dr
+    dy = (u + v) * dr
+    dpt = (dcx + dx, dcy + 260 - dy)
+
+    def poly(pts):
+        return " ".join(f"{p[0]:.1f},{p[1]:.1f}" for p in pts)
+
+    parts = [f'<svg viewBox="0 0 {size_w} {size_h}" xmlns="http://www.w3.org/2000/svg">']
+
+    # cation triangle
+    parts.append(f'<polygon points="{poly([catQ,catF,catL])}" fill="none" stroke="#EDE6D6" stroke-width="1.3"/>')
+    parts.append(f'<text x="{catQ[0]:.1f}" y="{catQ[1]-10:.1f}" fill="#5C9683" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">Mg</text>')
+    parts.append(f'<text x="{catF[0]-8:.1f}" y="{catF[1]+16:.1f}" fill="#C06736" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">Ca</text>')
+    parts.append(f'<text x="{catL[0]+10:.1f}" y="{catL[1]+16:.1f}" fill="#D9B23C" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">Na+K</text>')
+    parts.append(f'<circle cx="{cat_pt[0]:.1f}" cy="{cat_pt[1]:.1f}" r="6" fill="#D9B23C" stroke="#14120F" stroke-width="1.3"/>')
+
+    # anion triangle
+    parts.append(f'<polygon points="{poly([anQ,anF,anL])}" fill="none" stroke="#EDE6D6" stroke-width="1.3"/>')
+    parts.append(f'<text x="{anQ[0]:.1f}" y="{anQ[1]-10:.1f}" fill="#5C9683" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">HCO3+CO3</text>')
+    parts.append(f'<text x="{anF[0]-8:.1f}" y="{anF[1]+16:.1f}" fill="#7A8FA6" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">Cl</text>')
+    parts.append(f'<text x="{anL[0]+8:.1f}" y="{anL[1]+16:.1f}" fill="#C06736" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">SO4</text>')
+    parts.append(f'<circle cx="{an_pt[0]:.1f}" cy="{an_pt[1]:.1f}" r="6" fill="#D9B23C" stroke="#14120F" stroke-width="1.3"/>')
+
+    # diamond
+    top = (dcx, dcy + 260 - 2*dr)
+    bottom = (dcx, dcy + 260)
+    leftv = (dcx - dr, dcy + 260 - dr)
+    rightv = (dcx + dr, dcy + 260 - dr)
+    parts.append(f'<polygon points="{poly([top,rightv,bottom,leftv])}" fill="none" stroke="#EDE6D6" stroke-width="1.3"/>')
+    parts.append(f'<text x="{bottom[0]:.1f}" y="{bottom[1]+18:.1f}" fill="#EDE6D6" opacity="0.6" font-family="IBM Plex Mono" font-size="9.5" text-anchor="middle">Ca+Mg dominant / HCO3 dominant</text>')
+    parts.append(f'<text x="{top[0]:.1f}" y="{top[1]-8:.1f}" fill="#EDE6D6" opacity="0.6" font-family="IBM Plex Mono" font-size="9.5" text-anchor="middle">Na+K dominant / SO4+Cl dominant</text>')
+    parts.append(f'<text x="{leftv[0]-6:.1f}" y="{leftv[1]:.1f}" fill="#EDE6D6" opacity="0.6" font-family="IBM Plex Mono" font-size="9.5" text-anchor="end">Ca+Mg / SO4+Cl</text>')
+    parts.append(f'<text x="{rightv[0]+6:.1f}" y="{rightv[1]:.1f}" fill="#EDE6D6" opacity="0.6" font-family="IBM Plex Mono" font-size="9.5" text-anchor="start">Na+K / HCO3</text>')
+    parts.append(f'<circle cx="{dpt[0]:.1f}" cy="{dpt[1]:.1f}" r="7" fill="#C06736" stroke="#14120F" stroke-width="1.5"/>')
+
+    parts.append('</svg>')
+    return ''.join(parts)
+
+def classify(ca, mg, nak, hco3, so4, cl):
+    if ca > 50: cat = "Calcium"
+    elif mg > 50: cat = "Magnesium"
+    elif nak > 50: cat = "Sodium"
+    else: cat = "Mixed cation"
+
+    if hco3 > 50: an = "Bicarbonate"
+    elif so4 > 50: an = "Sulfate"
+    elif cl > 50: an = "Chloride"
+    else: an = "mixed anion"
+
+    return f"{cat}–{an} type water"
+
+@when("click", "#plotBtn")
+def plot(event):
+    status = document.getElementById("status")
+    try:
+        vals = {}
+        for k in ["Ca","Mg","Na","K","HCO3","CO3","SO4","Cl"]:
+            vals[k] = max(0.0, float(document.getElementById(f"ion-{k}").value))
+
+        meq = {}
+        meq["Ca"] = vals["Ca"]/EQ_WEIGHT["Ca"]
+        meq["Mg"] = vals["Mg"]/EQ_WEIGHT["Mg"]
+        meq["Na"] = vals["Na"]/EQ_WEIGHT["Na"]
+        meq["K"] = vals["K"]/EQ_WEIGHT["K"]
+        meq["HCO3"] = vals["HCO3"]/EQ_WEIGHT["HCO3"]
+        meq["CO3"] = vals["CO3"]/EQ_WEIGHT["CO3"]
+        meq["SO4"] = vals["SO4"]/EQ_WEIGHT["SO4"]
+        meq["Cl"] = vals["Cl"]/EQ_WEIGHT["Cl"]
+
+        cat_total = meq["Ca"] + meq["Mg"] + meq["Na"] + meq["K"]
+        an_total = meq["HCO3"] + meq["CO3"] + meq["SO4"] + meq["Cl"]
+        if cat_total <= 0 or an_total <= 0:
+            raise ValueError("cation and anion totals must be greater than 0")
+
+        ca_pct = meq["Ca"]/cat_total*100
+        mg_pct = meq["Mg"]/cat_total*100
+        nak_pct = (meq["Na"]+meq["K"])/cat_total*100
+
+        hco3_pct = (meq["HCO3"]+meq["CO3"])/an_total*100
+        so4_pct = meq["SO4"]/an_total*100
+        cl_pct = meq["Cl"]/an_total*100
+
+        facies = classify(ca_pct, mg_pct, nak_pct, hco3_pct, so4_pct, cl_pct)
+        document.getElementById("headline").innerText = facies
+        document.getElementById("piperDiagram").innerHTML = piper_svg(ca_pct, mg_pct, nak_pct, hco3_pct, so4_pct, cl_pct)
+
+        rows = "<tr><th>Ion</th><th>mg/L</th><th>meq/L</th><th>%</th></tr>"
+        cat_pcts = {"Ca": ca_pct, "Mg": mg_pct, "Na+K": nak_pct}
+        rows += f'<tr><td>Ca</td><td class="num">{vals["Ca"]:.1f}</td><td class="num">{meq["Ca"]:.2f}</td><td class="num">{ca_pct:.1f}%</td></tr>'
+        rows += f'<tr><td>Mg</td><td class="num">{vals["Mg"]:.1f}</td><td class="num">{meq["Mg"]:.2f}</td><td class="num">{mg_pct:.1f}%</td></tr>'
+        rows += f'<tr><td>Na+K</td><td class="num">{vals["Na"]+vals["K"]:.1f}</td><td class="num">{meq["Na"]+meq["K"]:.2f}</td><td class="num">{nak_pct:.1f}%</td></tr>'
+        rows += f'<tr><td>HCO3+CO3</td><td class="num">{vals["HCO3"]+vals["CO3"]:.1f}</td><td class="num">{meq["HCO3"]+meq["CO3"]:.2f}</td><td class="num">{hco3_pct:.1f}%</td></tr>'
+        rows += f'<tr><td>SO4</td><td class="num">{vals["SO4"]:.1f}</td><td class="num">{meq["SO4"]:.2f}</td><td class="num">{so4_pct:.1f}%</td></tr>'
+        rows += f'<tr><td>Cl</td><td class="num">{vals["Cl"]:.1f}</td><td class="num">{meq["Cl"]:.2f}</td><td class="num">{cl_pct:.1f}%</td></tr>'
+        document.getElementById("meqTable").innerHTML = rows
+
+        status.className = "status"
+        status.innerText = f"Cation total {cat_total:.2f} meq/L · Anion total {an_total:.2f} meq/L"
+    except Exception as e:
+        status.className = "status err"
+        status.innerText = f"Check your inputs — {e}"
+
+plot(None)
+</script>
+
+</body>
+</html>
