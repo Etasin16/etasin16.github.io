@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<meta name="theme-color" content="#14120F" />
+<title>CIPW Norm Calculator — Eaftada</title>
+<meta name="description" content="Convert whole-rock oxide analyses into CIPW normative mineralogy — runs entirely in your browser via PyScript.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+<script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{ border-bottom:1px solid var(--hairline); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:32px; max-width:720px; }
+.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
+.title-block p{ color:var(--limestone-70); font-size:15px; }
+
+.layout{ display:grid; grid-template-columns:340px 1fr; gap:28px; align-items:start; }
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
+.panel h3{ font-size:13px; margin-bottom:14px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--limestone-45); }
+
+.field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.field{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.field label{ font-family:var(--mono); font-size:10px; letter-spacing:.03em; color:var(--limestone-45); }
+input{
+  background:var(--basalt-3); border:1px solid var(--hairline-str); color:var(--limestone);
+  border-radius:4px; padding:8px 9px; font-family:var(--mono); font-size:12.5px; width:100%;
+}
+input:focus{ border-color:var(--ochre); outline:none; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:12px 18px; border-radius:5px;
+  cursor:pointer; border:1px solid var(--rust); background:var(--rust); color:var(--basalt); font-weight:500;
+  margin-top:8px; transition:background .2s ease;
+}
+.btn:hover{ background:#D3763F; }
+
+.status{ font-family:var(--mono); font-size:11px; color:var(--limestone-45); margin-top:10px; line-height:1.5; }
+.status.err{ color:var(--rust); }
+
+.result-panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:28px; }
+.bar-wrap{ margin-bottom:22px; }
+#barChart svg{ width:100%; height:auto; display:block; }
+
+table{ width:100%; border-collapse:collapse; font-size:13px; }
+th, td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--hairline); }
+th{ font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--limestone-45); font-weight:400; }
+td.num{ font-family:var(--mono); text-align:right; }
+tr.total td{ border-top:1px solid var(--hairline-str); border-bottom:none; font-weight:600; color:var(--ochre); padding-top:12px; }
+
+.notes{ margin-top:16px; font-size:12px; color:var(--limestone-45); background:var(--basalt-3); border:1px solid var(--hairline); border-radius:6px; padding:12px 14px; }
+
+footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">EAFTADA<span>.COM</span></a>
+  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/geochemistry/">Geochemistry</a> / CIPW Norm Calculator</span>
+</header>
+
+<main>
+  <div class="title-block">
+    <span class="eyebrow">Geochemistry / Igneous Petrology · Runs entirely in your browser · PyScript</span>
+    <h1>CIPW Norm Calculator</h1>
+    <p>Enter a whole-rock major-oxide analysis (wt%) to compute the CIPW normative mineralogy — the standard-mineral assemblage a magma would crystallize under equilibrium, anhydrous conditions. Covers the common silica-saturated and mildly silica-undersaturated pathway.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Oxide analysis (wt%)</h3>
+      <div class="field-grid">
+        <div class="field"><label>SiO2</label><input type="number" id="ox-SiO2" value="49.20" step="0.01"></div>
+        <div class="field"><label>TiO2</label><input type="number" id="ox-TiO2" value="2.00" step="0.01"></div>
+        <div class="field"><label>Al2O3</label><input type="number" id="ox-Al2O3" value="14.50" step="0.01"></div>
+        <div class="field"><label>Fe2O3</label><input type="number" id="ox-Fe2O3" value="2.50" step="0.01"></div>
+        <div class="field"><label>FeO</label><input type="number" id="ox-FeO" value="9.50" step="0.01"></div>
+        <div class="field"><label>MnO</label><input type="number" id="ox-MnO" value="0.17" step="0.01"></div>
+        <div class="field"><label>MgO</label><input type="number" id="ox-MgO" value="7.50" step="0.01"></div>
+        <div class="field"><label>CaO</label><input type="number" id="ox-CaO" value="11.00" step="0.01"></div>
+        <div class="field"><label>Na2O</label><input type="number" id="ox-Na2O" value="2.50" step="0.01"></div>
+        <div class="field"><label>K2O</label><input type="number" id="ox-K2O" value="0.50" step="0.01"></div>
+        <div class="field"><label>P2O5</label><input type="number" id="ox-P2O5" value="0.25" step="0.01"></div>
+      </div>
+      <button class="btn" id="calcBtn">Calculate norm</button>
+      <div class="status" id="status">Ready. Default values are a typical tholeiitic basalt.</div>
+    </div>
+
+    <div class="result-panel">
+      <div class="bar-wrap" id="barChart"></div>
+      <table id="resultTable"><tbody></tbody></table>
+      <div class="notes" id="notes"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Runs client-side via PyScript (Pyodide). No server, no data leaves your browser. Simplified implementation — strongly peralkaline or extremely silica-undersaturated (nepheline-normative) rocks are outside this calculator's scope.
+</footer>
+
+<script type="py">
+from pyscript import document, when
+
+MW = {
+    "SiO2": 60.08, "TiO2": 79.90, "Al2O3": 101.96, "Fe2O3": 159.69, "FeO": 71.85,
+    "MnO": 70.94, "MgO": 40.30, "CaO": 56.08, "Na2O": 61.98, "K2O": 94.20, "P2O5": 141.94,
+}
+
+COLORS = {
+    "Quartz": "#C06736", "Corundum": "#D9695A", "Orthoclase": "#D9B23C", "Albite": "#E3C96B",
+    "Anorthite": "#5C9683", "Diopside": "#3F7A68", "Hypersthene": "#7A8FA6", "Olivine": "#9CB4C7",
+    "Wollastonite": "#B78FA6", "Magnetite": "#5A5551", "Ilmenite": "#7A6F63", "Hematite": "#8C4A3A",
+    "Apatite": "#D9A6D9",
+}
+
+def cipw_norm(ox):
+    m = {k: ox.get(k, 0.0) / MW[k] for k in MW}
+    mFe2 = m["FeO"] + m["MnO"]
+    notes = []
+
+    # Apatite
+    ap_mol = min(m["P2O5"], m["CaO"] / 3.3333) if m["P2O5"] > 0 else 0.0
+    caO_used_ap = 3.3333 * ap_mol
+    if ap_mol < m["P2O5"] - 1e-6:
+        notes.append("CaO was insufficient to consume all P2O5 as apatite; excess P2O5 is unassigned.")
+    mCa = m["CaO"] - caO_used_ap
+
+    # Ilmenite
+    il_mol = min(m["TiO2"], mFe2)
+    if il_mol < m["TiO2"] - 1e-6:
+        notes.append("FeO was insufficient to consume all TiO2 as ilmenite; excess TiO2 is unassigned (not modeled as sphene/rutile).")
+    mFe2 = mFe2 - il_mol
+
+    # Magnetite / Hematite
+    if mFe2 >= m["Fe2O3"]:
+        mt_mol = m["Fe2O3"]; hm_mol = 0.0; mFe2 = mFe2 - m["Fe2O3"]
+    else:
+        mt_mol = mFe2; hm_mol = m["Fe2O3"] - mFe2; mFe2 = 0.0
+
+    # Orthoclase
+    or_mol = min(m["K2O"], m["Al2O3"])
+    if or_mol < m["K2O"] - 1e-6:
+        notes.append("Al2O3 was insufficient for all K2O as orthoclase; excess K2O is unassigned (possible leucite, not modeled).")
+    mAl = m["Al2O3"] - or_mol
+
+    # Albite
+    ab_mol = min(m["Na2O"], mAl)
+    if ab_mol < m["Na2O"] - 1e-6:
+        notes.append("Al2O3 was insufficient for all Na2O as albite; excess Na2O is unassigned (possible acmite, not modeled).")
+    mAl = mAl - ab_mol
+
+    # Anorthite / Corundum
+    an_mol = min(mAl, mCa)
+    c_mol = max(0.0, mAl - mCa)
+    mCa = mCa - an_mol
+
+    # Mafic pool: diopside, hypersthene, olivine
+    mMgFe = m["MgO"] + mFe2
+    mgnum = (m["MgO"] / mMgFe) if mMgFe > 0 else 0.0
+
+    di_total = min(mCa, mMgFe)
+    wo_mol = max(0.0, mCa - mMgFe)
+    mMgFe_rem = mMgFe - di_total
+
+    hy_total = mMgFe_rem
+    ol_total = 0.0
+
+    req_si = 6*or_mol + 6*ab_mol + 2*an_mol + 2*di_total + hy_total + wo_mol
+    remaining_si = m["SiO2"] - req_si
+
+    if remaining_si >= 0:
+        q_mol = remaining_si
+    else:
+        deficit = -remaining_si
+        x = min(hy_total, 2*deficit)
+        ol_total = x
+        hy_total = hy_total - x
+        freed = 0.5 * x
+        new_remaining = remaining_si + freed
+        if new_remaining >= -1e-6:
+            q_mol = max(0.0, new_remaining)
+        else:
+            q_mol = 0.0
+            notes.append("Rock is strongly silica-undersaturated — beyond this simplified calculator's scope (nepheline-normative adjustment not modeled). Olivine/hypersthene split is approximate.")
+
+    di_mg, di_fe = di_total*mgnum, di_total*(1-mgnum)
+    hy_mg, hy_fe = hy_total*mgnum, hy_total*(1-mgnum)
+    ol_mg, ol_fe = ol_total*mgnum, ol_total*(1-mgnum)
+
+    minerals = {
+        "Quartz": q_mol * MW["SiO2"],
+        "Corundum": c_mol * MW["Al2O3"],
+        "Orthoclase": or_mol * (MW["K2O"] + MW["Al2O3"] + 6*MW["SiO2"]),
+        "Albite": ab_mol * (MW["Na2O"] + MW["Al2O3"] + 6*MW["SiO2"]),
+        "Anorthite": an_mol * (MW["CaO"] + MW["Al2O3"] + 2*MW["SiO2"]),
+        "Diopside": di_total*MW["CaO"] + di_mg*MW["MgO"] + di_fe*MW["FeO"] + 2*di_total*MW["SiO2"],
+        "Hypersthene": hy_mg*MW["MgO"] + hy_fe*MW["FeO"] + hy_total*MW["SiO2"],
+        "Olivine": ol_mg*MW["MgO"] + ol_fe*MW["FeO"] + 0.5*ol_total*MW["SiO2"],
+        "Wollastonite": wo_mol * (MW["CaO"] + MW["SiO2"]),
+        "Magnetite": mt_mol * (MW["Fe2O3"] + MW["FeO"]),
+        "Hematite": hm_mol * MW["Fe2O3"],
+        "Ilmenite": il_mol * (MW["TiO2"] + MW["FeO"]),
+        "Apatite": ap_mol * (MW["P2O5"] + caO_used_ap*0 + 3.3333*ap_mol*MW["CaO"]) if ap_mol > 0 else 0.0,
+    }
+    # fix apatite mass calc (P2O5 consumed + CaO consumed)
+    minerals["Apatite"] = ap_mol * MW["P2O5"] + caO_used_ap * MW["CaO"]
+
+    minerals = {k: v for k, v in minerals.items() if v > 0.001}
+    return minerals, notes
+
+def bar_svg(minerals, total_input, size_w=760, size_h=70):
+    total = sum(minerals.values())
+    parts = [f'<svg viewBox="0 0 {size_w} {size_h}" xmlns="http://www.w3.org/2000/svg">']
+    x = 0
+    for name, wt in sorted(minerals.items(), key=lambda kv: -kv[1]):
+        frac = wt / total if total > 0 else 0
+        w = frac * size_w
+        color = COLORS.get(name, "#EDE6D6")
+        parts.append(f'<rect x="{x:.1f}" y="10" width="{w:.1f}" height="34" fill="{color}"/>')
+        if frac > 0.045:
+            parts.append(f'<text x="{x+w/2:.1f}" y="60" fill="#EDE6D6" opacity="0.75" font-family="IBM Plex Mono" font-size="9.5" text-anchor="middle">{name}</text>')
+        x += w
+    parts.append('</svg>')
+    return ''.join(parts)
+
+@when("click", "#calcBtn")
+def calculate(event):
+    status = document.getElementById("status")
+    try:
+        ox = {}
+        total_input = 0.0
+        for k in MW:
+            v = float(document.getElementById(f"ox-{k}").value)
+            ox[k] = v
+            total_input += v
+
+        minerals, notes = cipw_norm(ox)
+        total_norm = sum(minerals.values())
+
+        document.getElementById("barChart").innerHTML = bar_svg(minerals, total_input)
+
+        rows = ""
+        for name, wt in sorted(minerals.items(), key=lambda kv: -kv[1]):
+            pct = wt / total_norm * 100 if total_norm > 0 else 0
+            rows += f'<tr><td>{name}</td><td class="num">{pct:.2f}%</td></tr>'
+        rows += f'<tr class="total"><td>Total normative minerals</td><td class="num">{total_norm:.2f} (input total {total_input:.2f})</td></tr>'
+        document.querySelector("#resultTable tbody").innerHTML = rows
+
+        notes_html = "<b style='color:var(--limestone)'>Notes:</b><br>" + "<br>".join(notes) if notes else "No saturation issues encountered — this is a straightforward silica-saturated norm."
+        document.getElementById("notes").innerHTML = notes_html
+
+        status.className = "status"
+        status.innerText = f"Norm computed from {total_input:.2f}% input oxides."
+    except Exception as e:
+        status.className = "status err"
+        status.innerText = f"Check your inputs — {e}"
+
+calculate(None)
+</script>
+
+</body>
+</html>
