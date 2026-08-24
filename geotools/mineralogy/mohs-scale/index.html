@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<meta name="theme-color" content="#14120F" />
+<title>Mohs Hardness Explorer — Eaftada</title>
+<meta name="description" content="Estimate mineral hardness from common scratch tests and see it placed on the Mohs scale, with reference minerals — runs entirely in your browser via PyScript.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+<script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+
+<style>
+:root{
+  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
+  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
+  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
+  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+h1,h2,h3{ font-family:var(--display); margin:0; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+
+header{ border-bottom:1px solid var(--hairline); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
+.brand span{ color:var(--rust); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
+.crumb a{ text-decoration:none; color:var(--limestone-70); }
+.crumb a:hover{ color:var(--ochre); }
+
+main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:32px; max-width:700px; }
+.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
+.title-block p{ color:var(--limestone-70); font-size:15px; }
+
+.scale-panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:28px 20px 20px; margin-bottom:32px; }
+.scale-panel svg{ width:100%; height:auto; display:block; }
+
+.layout{ display:grid; grid-template-columns:380px 1fr; gap:28px; align-items:start; }
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
+.panel h3{ font-size:14px; margin-bottom:16px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--limestone-45); }
+
+.test-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid var(--hairline); }
+.test-row:last-child{ border-bottom:none; }
+.test-row__label{ font-size:13px; }
+.test-row__label b{ display:block; font-family:var(--display); font-size:15px; font-weight:600; }
+.test-row__label span{ font-family:var(--mono); font-size:11px; color:var(--limestone-45); }
+.toggle{ display:flex; gap:6px; }
+.toggle button{
+  font-family:var(--mono); font-size:11px; padding:7px 12px; border-radius:4px; cursor:pointer;
+  border:1px solid var(--hairline-str); background:none; color:var(--limestone-70);
+}
+.toggle button.is-active{ background:var(--rust); border-color:var(--rust); color:var(--basalt); font-weight:500; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:12px 18px; border-radius:5px;
+  cursor:pointer; border:1px solid var(--rust); background:var(--rust); color:var(--basalt); font-weight:500;
+  margin-top:16px; transition:background .2s ease;
+}
+.btn:hover{ background:#D3763F; }
+
+.result-box{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:28px; }
+.result-headline{ font-family:var(--display); font-size:26px; color:var(--ochre); margin-bottom:8px; }
+.result-body{ font-size:13.5px; color:var(--limestone-70); margin-bottom:20px; }
+.candidate-list{ display:flex; flex-wrap:wrap; gap:8px; }
+.candidate-chip{ font-family:var(--mono); font-size:12px; padding:7px 12px; border-radius:16px; background:var(--basalt-3); border:1px solid var(--hairline-str); }
+
+footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">EAFTADA<span>.COM</span></a>
+  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/mineralogy/">Mineralogy</a> / Mohs Hardness Explorer</span>
+</header>
+
+<main>
+  <div class="title-block">
+    <span class="eyebrow">Mineralogy · Runs entirely in your browser · PyScript</span>
+    <h1>Mohs Hardness Explorer</h1>
+    <p>Run through four common scratch tests to bracket a mineral's hardness, and see where it lands on the reference scale alongside the ten Mohs index minerals.</p>
+  </div>
+
+  <div class="scale-panel">
+    <div id="scaleDiagram"></div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Scratch tests</h3>
+      <div id="testRows"></div>
+      <button class="btn" id="estimateBtn">Estimate hardness</button>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-headline">Run the tests to see a result.</div>
+      <div class="result-body">Answer each row on the left — even one or two answers narrows the range.</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Runs client-side via PyScript (Pyodide). No server, no data leaves your browser.
+</footer>
+
+<script type="py">
+import math
+from pyscript import document, when
+
+MOHS = [
+    (1, "Talc"), (2, "Gypsum"), (3, "Calcite"), (4, "Fluorite"), (5, "Apatite"),
+    (6, "Orthoclase"), (7, "Quartz"), (8, "Topaz"), (9, "Corundum"), (10, "Diamond"),
+]
+TESTERS = [
+    ("fingernail", "Fingernail", 2.5),
+    ("coin", "Copper coin", 3.5),
+    ("glass", "Glass plate / steel knife", 5.5),
+    ("file", "Steel file", 6.5),
+]
+
+answers = {t[0]: None for t in TESTERS}
+
+def scale_svg(lo=None, hi=None, size_w=900, size_h=150):
+    pad = 60
+    w = size_w - 2*pad
+    def xpos(h): return pad + (h-1)/9 * w
+
+    parts = [f'<svg viewBox="0 0 {size_w} {size_h}" xmlns="http://www.w3.org/2000/svg">']
+
+    if lo is not None and hi is not None:
+        x1, x2 = xpos(lo), xpos(hi)
+        parts.append(f'<rect x="{x1:.1f}" y="30" width="{(x2-x1):.1f}" height="30" fill="#C06736" opacity="0.35" rx="3"/>')
+
+    parts.append(f'<line x1="{pad}" y1="45" x2="{pad+w}" y2="45" stroke="#EDE6D6" stroke-opacity="0.3" stroke-width="2"/>')
+
+    for h, name in MOHS:
+        x = xpos(h)
+        parts.append(f'<line x1="{x:.1f}" y1="30" x2="{x:.1f}" y2="60" stroke="#EDE6D6" stroke-opacity="0.5" stroke-width="1.5"/>')
+        parts.append(f'<text x="{x:.1f}" y="20" fill="#D9B23C" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">{h}</text>')
+        anchor = "start" if h == 1 else ("end" if h == 10 else "middle")
+        dx = 4 if h == 1 else (-4 if h == 10 else 0)
+        parts.append(f'<text x="{x+dx:.1f}" y="82" fill="#EDE6D6" opacity="0.75" font-family="IBM Plex Mono" font-size="10.5" text-anchor="{anchor}" transform="rotate(28 {x+dx:.1f} 82)">{name}</text>')
+
+    for key, label, val in TESTERS:
+        x = xpos(val)
+        parts.append(f'<polygon points="{x:.1f},108 {x-5:.1f},118 {x+5:.1f},118" fill="#5C9683"/>')
+        parts.append(f'<text x="{x:.1f}" y="134" fill="#5C9683" font-family="IBM Plex Mono" font-size="9.5" text-anchor="middle">{label}</text>')
+
+    parts.append('</svg>')
+    return ''.join(parts)
+
+def render_tests():
+    rows_html = ""
+    for key, label, val in TESTERS:
+        rows_html += f'''
+        <div class="test-row">
+          <div class="test-row__label"><b>{label}</b><span>H ≈ {val}</span></div>
+          <div class="toggle" data-tester="{key}">
+            <button data-ans="scratches" type="button">Scratches it</button>
+            <button data-ans="no" type="button">Doesn't scratch</button>
+          </div>
+        </div>'''
+    document.getElementById("testRows").innerHTML = rows_html
+
+render_tests()
+document.getElementById("scaleDiagram").innerHTML = scale_svg()
+
+@when("click", "#testRows .toggle button")
+def toggle_answer(event):
+    btn = event.currentTarget
+    group = btn.parentElement
+    tester_key = group.getAttribute("data-tester")
+    ans = btn.getAttribute("data-ans")
+    answers[tester_key] = (ans == "scratches")
+    for b in group.children:
+        b.classList.remove("is-active")
+    btn.classList.add("is-active")
+
+@when("click", "#estimateBtn")
+def estimate(event):
+    lo, hi = 1.0, 10.0
+    answered = 0
+    for key, label, val in TESTERS:
+        a = answers.get(key)
+        if a is None:
+            continue
+        answered += 1
+        if a:  # tester scratches the mineral -> mineral is softer or equal
+            hi = min(hi, val)
+        else:  # tester does not scratch -> mineral is harder
+            lo = max(lo, val)
+
+    box = document.getElementById("resultBox")
+    diagram = document.getElementById("scaleDiagram")
+
+    if answered == 0:
+        box.innerHTML = '<div class="result-headline">Answer at least one test.</div><div class="result-body">Even a single scratch test narrows the range.</div>'
+        return
+
+    if lo > hi:
+        box.innerHTML = '<div class="result-headline">Inconsistent answers</div><div class="result-body">Those answers contradict each other — double-check the tests (e.g. a mineral that scratches glass should also scratch a fingernail).</div>'
+        diagram.innerHTML = scale_svg()
+        return
+
+    candidates = [name for h, name in MOHS if lo - 0.001 <= h <= hi + 0.001]
+    cand_html = "".join(f'<span class="candidate-chip">{n}</span>' for n in candidates) or '<span class="candidate-chip">No index mineral falls exactly in this range</span>'
+
+    range_txt = f"{lo:.1f}" if lo == hi else f"{lo:.1f} – {hi:.1f}"
+    box.innerHTML = f'''
+      <div class="result-headline">Hardness ≈ {range_txt}</div>
+      <div class="result-body">Based on {answered} of 4 tests. Reference minerals in this range:</div>
+      <div class="candidate-list">{cand_html}</div>
+    '''
+    diagram.innerHTML = scale_svg(lo, hi)
+</script>
+
+</body>
+</html>
