@@ -39,3 +39,325 @@
   .panel h2 { font-size: 1rem; margin: 0 0 10px; }
 
   label.field { display: block; font-size: .85rem; color: var(--muted); }
+  input[type=text], input[type=number] {
+    width: 100%;
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+  }
+  input:focus-visible, button:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 1px;
+  }
+
+  .item { border-top: 1px solid var(--line); padding: 10px 0; }
+  .item:first-of-type { border-top: 0; }
+  .item-head { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; }
+  .item-head input { width: 20px; height: 20px; accent-color: var(--green); flex: none; }
+  .item-fields {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 8px 0 0 30px;
+  }
+  .item.on .item-fields { display: grid; }
+  .item.on .item-head { color: var(--green); }
+  .item.bad input.price { border-color: var(--danger); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--green);
+    background: var(--green);
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background: var(--green-dark); }
+  button.secondary { background: #fff; color: var(--green); }
+  button.secondary:hover { background: #eef4f0; }
+  #msg { color: var(--danger); font-size: .9rem; margin: 8px 0 0; min-height: 1.2em; }
+
+  #output { display: none; }
+  .scroll { overflow-x: auto; padding-bottom: 8px; }
+
+  /* ===== Invoice (fixed width so the download looks the same on every device) ===== */
+  #invoice {
+    width: 600px;
+    background: #fff;
+    color: #1d2a24;
+    padding: 32px 36px;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+  }
+  .inv-top { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid var(--green); padding-bottom: 14px; }
+  .inv-top img { height: 64px; width: auto; display: block; }
+  .inv-top h3 { margin: 0; font-size: 1.35rem; color: var(--green); line-height: 1.2; }
+  .inv-top p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+  .inv-intro { margin: 18px 0 14px; font-size: .95rem; }
+  .inv-intro p { margin: 0 0 6px; }
+  table.inv { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  table.inv th {
+    text-align: left;
+    font-weight: 600;
+    padding: 8px 6px;
+    background: #eef4f0;
+    border-bottom: 1px solid var(--line);
+  }
+  table.inv td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.inv .r { text-align: right; white-space: nowrap; }
+  .inv-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding: 12px 8px;
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 4px;
+  }
+  .inv-foot { margin-top: 22px; text-align: center; font-size: .92rem; }
+  .inv-foot p { margin: 0 0 4px; }
+
+  @media (max-width: 520px) {
+    .item-fields { grid-template-columns: 1fr 1fr; margin-left: 0; }
+    .item-fields label:last-child { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Projonto Groceries – Invoice Maker</h1>
+
+  <div class="panel">
+    <label class="field">Customer name (optional)
+      <input type="text" id="customer" placeholder="Leave empty to print “Dear Customer”">
+    </label>
+  </div>
+
+  <div class="panel">
+    <h2>Products</h2>
+    <div id="items"></div>
+  </div>
+
+  <div class="actions" style="margin-bottom:6px">
+    <button id="generate">Generate invoice</button>
+    <button id="reset" class="secondary">Clear all</button>
+  </div>
+  <p id="msg" role="alert"></p>
+
+  <div id="output">
+    <div class="panel">
+      <div class="actions">
+        <button id="dlPng">Download PNG</button>
+        <button id="dlPdf" class="secondary">Download PDF</button>
+      </div>
+    </div>
+    <div class="scroll">
+      <div id="invoice">
+        <div class="inv-top">
+          <img src="Plogo.png" alt="" onerror="this.style.display='none'">
+          <div>
+            <h3>Projonto Groceries – Price Memo</h3>
+            <p id="invDate"></p>
+          </div>
+        </div>
+        <div class="inv-intro">
+          <p id="invDear">Dear Customer,</p>
+          <p>Thank you for shopping with Projonto Groceries. Here is your purchase summary:</p>
+        </div>
+        <table class="inv">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Weight</th>
+              <th class="r">Qty</th>
+              <th class="r">Unit price</th>
+              <th class="r">Amount (BDT)</th>
+            </tr>
+          </thead>
+          <tbody id="invRows"></tbody>
+        </table>
+        <div class="inv-total"><span>Total payable amount</span><span id="invTotal"></span></div>
+        <div class="inv-foot">
+          <p>Thank you for choosing Projonto Groceries.</p>
+          <p>We truly appreciate your order!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  // ---- Edit this list to add/remove products. Second value is the default weight. ----
+  const PRODUCTS = [
+    ["Turmeric Powder", "100g"],
+    ["Chilli Powder", "200g"],
+    ["Cumin Powder", "100g"],
+    ["Coriander Powder", "100g"],
+    ["Cumin", "100g"],
+    ["Garam Masala Combo", "100g"],
+    ["Garam Masala (Elach)", "50g"],
+    ["Garam Masala (Labango)", "50g"],
+    ["Garam Masala (Darchini)", "50g"],
+    ["Garam Masala (Black Pepper)", "50g"],
+    ["Projotno Special Tea Gold", "250g"],
+    ["Projotno Special Green Tea", "100g"]
+  ];
+  const TAKA = "৳";
+
+  const $ = id => document.getElementById(id);
+  const itemsEl = $("items");
+
+  function fmt(n) {
+    return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, "");
+  }
+
+  // Build product rows
+  PRODUCTS.forEach(([name, weight], i) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <label class="item-head">
+        <input type="checkbox" class="chk">
+        <span class="nm"></span>
+      </label>
+      <div class="item-fields">
+        <label class="field">Quantity
+          <input type="number" class="qty" min="1" step="1" value="1" inputmode="numeric">
+        </label>
+        <label class="field">Weight
+          <input type="text" class="wt">
+        </label>
+        <label class="field">Price per piece (${TAKA})
+          <input type="number" class="price" min="0" step="any" inputmode="decimal" placeholder="0">
+        </label>
+      </div>`;
+    div.querySelector(".nm").textContent = name;
+    div.querySelector(".wt").value = weight;
+    div.querySelector(".chk").addEventListener("change", e => {
+      div.classList.toggle("on", e.target.checked);
+    });
+    div.dataset.name = name;
+    itemsEl.appendChild(div);
+  });
+
+  function setMsg(t) { $("msg").textContent = t; }
+
+  $("generate").addEventListener("click", () => {
+    setMsg("");
+    const rows = [];
+    let bad = false;
+    let total = 0;
+
+    itemsEl.querySelectorAll(".item").forEach(div => {
+      div.classList.remove("bad");
+      if (!div.querySelector(".chk").checked) return;
+      const qty = parseFloat(div.querySelector(".qty").value);
+      const price = parseFloat(div.querySelector(".price").value);
+      const weight = div.querySelector(".wt").value.trim();
+      if (!(qty > 0) || !(price > 0)) {
+        div.classList.add("bad");
+        bad = true;
+        return;
+      }
+      const amount = qty * price;
+      total += amount;
+      rows.push({ name: div.dataset.name, weight, qty, price, amount });
+    });
+
+    if (bad) { setMsg("Enter a quantity and a price above 0 for every selected product."); return; }
+    if (!rows.length) { setMsg("Select at least one product."); return; }
+
+    const tbody = $("invRows");
+    tbody.innerHTML = "";
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      const cells = [
+        [r.name, ""],
+        [r.weight, ""],
+        [fmt(r.qty) + "x", "r"],
+        [TAKA + fmt(r.price), "r"],
+        [TAKA + fmt(r.amount), "r"]
+      ];
+      cells.forEach(([text, cls]) => {
+        const td = document.createElement("td");
+        td.textContent = text;
+        if (cls) td.className = cls;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    const cust = $("customer").value.trim();
+    $("invDear").textContent = cust ? `Dear ${cust},` : "Dear Customer,";
+    $("invTotal").textContent = TAKA + fmt(total);
+    $("invDate").textContent = new Date().toLocaleDateString("en-GB", {
+      day: "numeric", month: "long", year: "numeric"
+    });
+
+    $("output").style.display = "block";
+    $("output").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  $("reset").addEventListener("click", () => {
+    itemsEl.querySelectorAll(".item").forEach(div => {
+      div.classList.remove("on", "bad");
+      div.querySelector(".chk").checked = false;
+      div.querySelector(".qty").value = 1;
+      div.querySelector(".price").value = "";
+    });
+    $("customer").value = "";
+    $("output").style.display = "none";
+    setMsg("");
+  });
+
+  async function capture() {
+    await document.fonts.ready;
+    return html2canvas($("invoice"), { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+  }
+
+  function fileStem() {
+    const c = $("customer").value.trim().replace(/[^\w\-]+/g, "_");
+    const d = new Date().toISOString().slice(0, 10);
+    return "invoice_" + (c ? c + "_" : "") + d;
+  }
+
+  $("dlPng").addEventListener("click", async () => {
+    try {
+      const canvas = await capture();
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = fileStem() + ".png";
+      a.click();
+    } catch (e) {
+      setMsg("Download failed. Open this page through GitHub Pages (not as a local file) so the logo can load.");
+    }
+  });
+
+  $("dlPdf").addEventListener("click", async () => {
+    try {
+      const canvas = await capture();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const margin = 10;
+      const w = pageW - margin * 2;
+      const h = (canvas.height * w) / canvas.width;
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, w, h);
+      pdf.save(fileStem() + ".pdf");
+    } catch (e) {
+      setMsg("Download failed. Open this page through GitHub Pages (not as a local file) so the logo can load.");
+    }
+  });
+</script>
+</body>
+</html>
