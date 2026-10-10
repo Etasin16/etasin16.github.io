@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no">
 <title>Projonto Groceries – Invoice Maker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +20,8 @@
     --danger: #b3261e;
   }
   * { box-sizing: border-box; }
+  /* stop phone numbers being turned into underlined links by the browser */
+  a[href^="tel"], a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
   body {
     margin: 0;
     font-family: "Hind Siliguri", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -246,7 +249,7 @@
               <img src="Plogo.png" alt="" onerror="this.style.display='none'">
               <div>
                 <h3>Projonto Groceries</h3>
-                <p>WhatsApp: 01975499590</p>
+                <p>WhatsApp: 01975-499590</p>
               </div>
             </div>
             <div class="inv-meta">
