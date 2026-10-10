@@ -16,7 +16,6 @@
     --card: #ffffff;
     --green: #1f5c3f;
     --green-dark: #164530;
-    --spice: #c8791a;
     --danger: #b3261e;
   }
   * { box-sizing: border-box; }
@@ -27,7 +26,7 @@
     color: var(--ink);
     line-height: 1.5;
   }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
   h1 { font-size: 1.4rem; margin: 8px 0 16px; }
   .panel {
     background: var(--card);
@@ -35,11 +34,13 @@
     border-radius: 10px;
     padding: 14px;
     margin-bottom: 16px;
+    max-width: 760px;
   }
   .panel h2 { font-size: 1rem; margin: 0 0 10px; }
 
-  label.field { display: block; font-size: .85rem; color: var(--muted); }
-  input[type=text], input[type=number] {
+  label.field { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 10px; }
+  label.field:last-child { margin-bottom: 0; }
+  input[type=text], input[type=number], input[type=tel], textarea {
     width: 100%;
     font: inherit;
     padding: 8px 10px;
@@ -48,10 +49,15 @@
     background: #fff;
     color: var(--ink);
   }
-  input:focus-visible, button:focus-visible {
+  textarea { resize: vertical; }
+  input:focus-visible, textarea:focus-visible, button:focus-visible {
     outline: 2px solid var(--green);
     outline-offset: 1px;
   }
+  input:disabled { background: #f0f2f0; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .check { display: flex; align-items: center; gap: 10px; font-weight: 500; cursor: pointer; margin: 0 0 10px; }
+  .check input { width: 20px; height: 20px; accent-color: var(--green); flex: none; }
 
   .item { border-top: 1px solid var(--line); padding: 10px 0; }
   .item:first-of-type { border-top: 0; }
@@ -66,6 +72,7 @@
   .item.on .item-fields { display: grid; }
   .item.on .item-head { color: var(--green); }
   .item.bad input.price { border-color: var(--danger); }
+  .item-fields label.field { margin-bottom: 0; }
 
   .actions { display: flex; flex-wrap: wrap; gap: 8px; }
   button {
@@ -81,73 +88,91 @@
   button:hover { background: var(--green-dark); }
   button.secondary { background: #fff; color: var(--green); }
   button.secondary:hover { background: #eef4f0; }
-  #msg, .msg { color: var(--danger); font-size: .9rem; margin: 8px 0 0; min-height: 1.2em; }
+  .msg { color: var(--danger); font-size: .9rem; margin: 8px 0 0; min-height: 1.2em; }
 
   #output { display: none; }
-  .scroll { overflow-x: auto; padding-bottom: 8px; }
 
-  /* ===== Invoice (fixed width so the download looks the same on every device) ===== */
+  /* ===== Invoice: landscape, fixed 960px wide so downloads look the same on every device ===== */
+  #invFit { width: 100%; overflow: hidden; }
+  #invScale { width: 960px; transform-origin: top left; }
   #invoice {
-    width: 600px;
+    width: 960px;
     background: #fff;
     color: #1d2a24;
-    padding: 32px 36px;
-    margin: 0 auto;
+    padding: 28px 36px 30px;
     border: 1px solid var(--line);
   }
-  .inv-top { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid var(--green); padding-bottom: 14px; }
-  .inv-top img { height: 64px; width: auto; display: block; }
-  .inv-top h3 { margin: 0; font-size: 1.35rem; color: var(--green); line-height: 1.2; }
-  .inv-top p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
-  .inv-intro { margin: 18px 0 14px; font-size: .95rem; }
-  .inv-intro p { margin: 0 0 6px; }
-  table.inv { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  .inv-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 3px solid var(--green);
+    padding-bottom: 14px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand img { height: 72px; width: auto; display: block; }
+  .brand h3 { margin: 0; font-size: 1.8rem; line-height: 1.2; color: var(--green); }
+  .brand p { margin: 2px 0 0; font-size: .92rem; color: var(--muted); }
+  .inv-meta { text-align: right; font-size: .9rem; color: var(--muted); }
+  .inv-meta canvas { display: block; margin-left: auto; max-width: 100%; height: auto; }
+  .inv-meta p { margin: 4px 0 0; }
+
+  .inv-mid { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; margin: 18px 0 16px; }
+  .memo-title { margin: 0 0 8px; font-size: 1.35rem; color: var(--green); }
+  .inv-intro p { margin: 0 0 6px; font-size: .95rem; }
+  .billto {
+    flex: none;
+    width: 320px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: .92rem;
+  }
+  .billto h4 { margin: 0 0 4px; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .billto div { white-space: pre-line; overflow-wrap: anywhere; }
+  .billto .bn { font-weight: 600; }
+
+  table.inv { width: 100%; border-collapse: collapse; font-size: .95rem; }
   table.inv th {
     text-align: left;
     font-weight: 600;
-    padding: 8px 6px;
+    padding: 8px 8px;
     background: #eef4f0;
     border-bottom: 1px solid var(--line);
   }
-  table.inv td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.inv td { padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
   table.inv .r { text-align: right; white-space: nowrap; }
-  .inv-total {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 14px;
-    padding: 12px 8px;
-    background: var(--green);
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.1rem;
-    border-radius: 4px;
-  }
-  .inv-foot { margin-top: 22px; text-align: center; font-size: .92rem; }
+
+  .inv-bottom { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; margin-top: 16px; }
+  .inv-foot { flex: 1; font-size: .95rem; padding-top: 6px; }
   .inv-foot p { margin: 0 0 4px; }
-  .inv-status { margin-top: 12px; }
-  .pay-rows { margin-left: auto; width: 270px; font-size: .95rem; }
-  .pay-rows div { display: flex; justify-content: space-between; padding: 4px 8px; }
-  .pay-rows .due { font-weight: 700; color: #b3261e; border-top: 1px solid var(--line); }
   .stamp {
     display: block;
     width: max-content;
-    margin: 16px auto 8px;
+    margin: 18px 0 0 40px;
     transform: rotate(-10deg);
     border: 4px double #c62828;
     color: #c62828;
     font-weight: 700;
-    font-size: 2rem;
+    font-size: 2.2rem;
     letter-spacing: .15em;
     padding: 2px 16px 2px 26px;
     border-radius: 8px;
     opacity: .88;
   }
-  .inv-code { margin-top: 18px; text-align: center; }
-  .inv-code canvas { max-width: 100%; height: auto; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .check { display: flex; align-items: center; gap: 10px; font-weight: 500; cursor: pointer; margin-bottom: 10px; }
-  .check input { width: 20px; height: 20px; accent-color: var(--green); }
-  input:disabled { background: #f0f2f0; color: var(--muted); }
+  .totals { flex: none; width: 340px; font-size: .97rem; }
+  .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; }
+  .totals .grand {
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    padding: 10px 8px;
+    margin: 6px 0;
+  }
+  .totals .due { font-weight: 700; color: #b3261e; border-top: 1px solid var(--line); }
 
   @media (max-width: 520px) {
     .item-fields { grid-template-columns: 1fr 1fr; margin-left: 0; }
@@ -160,14 +185,21 @@
   <h1>Projonto Groceries – Invoice Maker</h1>
 
   <div class="panel">
+    <h2>Customer (Bill To)</h2>
     <div class="grid2">
-      <label class="field">Customer name (optional)
-        <input type="text" id="customer" placeholder="Empty prints “Dear Customer”">
+      <label class="field">Name
+        <input type="text" id="customer" placeholder="Optional">
       </label>
-      <label class="field">Invoice number
-        <input type="text" id="invNo">
+      <label class="field">Contact
+        <input type="tel" id="contact" placeholder="Optional">
       </label>
     </div>
+    <label class="field">Address
+      <textarea id="address" rows="2" placeholder="Optional"></textarea>
+    </label>
+    <label class="field">Invoice number
+      <input type="text" id="invNo">
+    </label>
   </div>
 
   <div class="panel">
@@ -179,11 +211,19 @@
     <button id="generate">Generate invoice</button>
     <button id="reset" class="secondary">Clear all</button>
   </div>
-  <p id="msg" role="alert"></p>
+  <p id="msg" class="msg" role="alert"></p>
 
   <div id="output">
     <div class="panel">
       <h2>Payment</h2>
+      <label class="check"><input type="checkbox" id="useDiscount"> Discount</label>
+      <label class="field" id="discWrap" style="display:none">Discount amount (৳)
+        <input type="number" id="discount" min="0" step="any" inputmode="decimal" placeholder="0">
+      </label>
+      <label class="check"><input type="checkbox" id="useDelivery"> Delivery fee</label>
+      <label class="field" id="delWrap" style="display:none">Delivery fee amount (৳)
+        <input type="number" id="delivery" min="0" step="any" inputmode="decimal" placeholder="0">
+      </label>
       <label class="check"><input type="checkbox" id="fullPaid"> Fully paid</label>
       <label class="field">Paid amount (৳)
         <input type="number" id="paid" min="0" step="any" inputmode="decimal" placeholder="0">
@@ -197,40 +237,60 @@
         <button id="dlPdf" class="secondary">Download PDF</button>
       </div>
     </div>
-    <div class="scroll">
-      <div id="invoice">
-        <div class="inv-top">
-          <img src="Plogo.png" alt="" onerror="this.style.display='none'">
-          <div>
-            <h3>Projonto Groceries – Price Memo</h3>
-            <p id="invNoShow"></p>
-            <p id="invDate"></p>
-            <p>WhatsApp: 01975499590</p>
+
+    <div id="invFit">
+      <div id="invScale">
+        <div id="invoice">
+          <div class="inv-top">
+            <div class="brand">
+              <img src="Plogo.png" alt="" onerror="this.style.display='none'">
+              <div>
+                <h3>Projonto Groceries</h3>
+                <p>WhatsApp: 01975499590</p>
+              </div>
+            </div>
+            <div class="inv-meta">
+              <canvas id="barcode"></canvas>
+              <p id="invDate"></p>
+            </div>
+          </div>
+
+          <div class="inv-mid">
+            <div class="inv-intro">
+              <h2 class="memo-title">Price Memo:-</h2>
+              <p id="invDear">Dear Customer,</p>
+              <p>Thank you for shopping with Projonto Groceries. Here is your purchase summary:</p>
+            </div>
+            <div class="billto" id="billTo" style="display:none">
+              <h4>Bill To:</h4>
+              <div class="bn" id="btName"></div>
+              <div id="btContact"></div>
+              <div id="btAddress"></div>
+            </div>
+          </div>
+
+          <table class="inv">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Weight</th>
+                <th class="r">Qty</th>
+                <th class="r">Unit price</th>
+                <th class="r">Amount (BDT)</th>
+              </tr>
+            </thead>
+            <tbody id="invRows"></tbody>
+          </table>
+
+          <div class="inv-bottom">
+            <div class="inv-foot">
+              <p>Thank you for choosing Projonto Groceries.</p>
+              <p>We truly appreciate your order!</p>
+              <div id="invStamp"></div>
+            </div>
+            <div class="totals" id="totals"></div>
           </div>
         </div>
-        <div class="inv-intro">
-          <p id="invDear">Dear Customer,</p>
-          <p>Thank you for shopping with Projonto Groceries. Here is your purchase summary:</p>
-        </div>
-        <table class="inv">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Weight</th>
-              <th class="r">Qty</th>
-              <th class="r">Unit price</th>
-              <th class="r">Amount (BDT)</th>
-            </tr>
-          </thead>
-          <tbody id="invRows"></tbody>
-        </table>
-        <div class="inv-total"><span>Total payable amount</span><span id="invTotal"></span></div>
-        <div id="invStatus" class="inv-status"></div>
-        <div class="inv-foot">
-          <p>Thank you for choosing Projonto Groceries.</p>
-          <p>We truly appreciate your order!</p>
-        </div>
-        <div class="inv-code"><canvas id="barcode"></canvas></div>
       </div>
     </div>
   </div>
@@ -243,10 +303,10 @@
   // ---- Edit this list to add/remove products. Second value is the default weight. ----
   const PRODUCTS = [
     ["Turmeric Powder", "100g"],
-    ["Chilli Powder", "100g"],
+    ["Chilli Powder", "200g"],
     ["Cumin Powder", "100g"],
     ["Coriander Powder", "100g"],
-    ["Cumin", "250g"],
+    ["Cumin", "100g"],
     ["Garam Masala Combo", "100g"],
     ["Garam Masala (Elach)", "50g"],
     ["Garam Masala (Labango)", "50g"],
@@ -256,16 +316,20 @@
     ["Projotno Special Green Tea", "100g"]
   ];
   const TAKA = "৳";
+  const INV_WIDTH = 960;
 
   const $ = id => document.getElementById(id);
   const itemsEl = $("items");
+  const r2 = n => Math.round(n * 100) / 100;
 
   function fmt(n) {
     return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, "");
   }
+  function setMsg(t) { $("msg").textContent = t; }
+  function setPayMsg(t) { $("payMsg").textContent = t; }
 
-  // Build product rows
-  PRODUCTS.forEach(([name, weight], i) => {
+  // ---- Product rows ----
+  PRODUCTS.forEach(([name, weight]) => {
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
@@ -292,8 +356,6 @@
     div.dataset.name = name;
     itemsEl.appendChild(div);
   });
-
-  function setMsg(t) { $("msg").textContent = t; }
 
   // ---- Invoice numbers: PG-YYMMDD-001, counted per day on this browser ----
   const INV_KEY = "pg_invoice_counter";
@@ -322,11 +384,75 @@
   }
   $("invNo").value = nextInvoiceNo();
 
+  // ---- Preview scaling (the invoice is always 960px wide; the preview is shrunk to fit the screen) ----
+  function fitPreview() {
+    if ($("output").style.display === "none") return;
+    const fit = $("invFit");
+    const s = Math.min(1, fit.clientWidth / INV_WIDTH);
+    $("invScale").style.transform = "scale(" + s + ")";
+    fit.style.height = ($("invoice").offsetHeight * s) + "px";
+  }
+  window.addEventListener("resize", fitPreview);
+
+  // ---- Totals / payment section (always visible on the invoice) ----
+  let subTotal = 0;
+
+  function addRow(parent, label, value, cls) {
+    const row = document.createElement("div");
+    row.className = "row" + (cls ? " " + cls : "");
+    const a = document.createElement("span");
+    a.textContent = label;
+    const b = document.createElement("span");
+    b.textContent = value;
+    row.append(a, b);
+    parent.appendChild(row);
+  }
+
+  function renderTotals(discount, delivery, paid, isPaid) {
+    const grand = r2(subTotal - discount + delivery);
+    const box = $("totals");
+    box.innerHTML = "";
+    addRow(box, "Sub total", TAKA + fmt(subTotal));
+    if (discount > 0) addRow(box, "Discount", "-" + TAKA + fmt(discount));
+    if (delivery > 0) addRow(box, "Delivery fee", TAKA + fmt(delivery));
+    addRow(box, "Grand Total", TAKA + fmt(grand), "grand");
+    addRow(box, "Paid :", TAKA + fmt(paid));
+    addRow(box, "Due :", TAKA + fmt(r2(grand - paid)), "due");
+
+    const stamp = $("invStamp");
+    stamp.innerHTML = "";
+    if (isPaid) {
+      const s = document.createElement("span");
+      s.className = "stamp";
+      s.textContent = "PAID";
+      stamp.appendChild(s);
+    }
+  }
+
+  // ---- Payment form behaviour ----
+  function resetPayment() {
+    ["useDiscount", "useDelivery", "fullPaid"].forEach(id => { $(id).checked = false; });
+    ["discount", "delivery", "paid"].forEach(id => { $(id).value = ""; });
+    $("discWrap").style.display = "none";
+    $("delWrap").style.display = "none";
+    $("paid").disabled = false;
+    $("dlRow").style.display = "none";
+    setPayMsg("");
+  }
+  $("useDiscount").addEventListener("change", e => {
+    $("discWrap").style.display = e.target.checked ? "block" : "none";
+    if (!e.target.checked) $("discount").value = "";
+  });
+  $("useDelivery").addEventListener("change", e => {
+    $("delWrap").style.display = e.target.checked ? "block" : "none";
+    if (!e.target.checked) $("delivery").value = "";
+  });
   $("fullPaid").addEventListener("change", e => {
     $("paid").disabled = e.target.checked;
     if (e.target.checked) $("paid").value = "";
   });
 
+  // ---- Step 1: generate the invoice ----
   $("generate").addEventListener("click", () => {
     setMsg("");
     const rows = [];
@@ -358,12 +484,9 @@
       return;
     }
 
-    currentTotal = Math.round(total * 100) / 100;
-    resetPayment();
-
     try {
       JsBarcode("#barcode", invNo, {
-        format: "CODE128", width: 2, height: 50, displayValue: true,
+        format: "CODE128", width: 2, height: 46, displayValue: true,
         fontSize: 14, margin: 0, background: "#ffffff"
       });
     } catch (e) {
@@ -371,20 +494,21 @@
       return;
     }
     saveCounter(invNo);
-    $("invNoShow").textContent = "Invoice No: " + invNo;
+
+    subTotal = r2(total);
+    resetPayment();
 
     const tbody = $("invRows");
     tbody.innerHTML = "";
     rows.forEach(r => {
       const tr = document.createElement("tr");
-      const cells = [
+      [
         [r.name, ""],
         [r.weight, ""],
         [fmt(r.qty) + "x", "r"],
         [TAKA + fmt(r.price), "r"],
         [TAKA + fmt(r.amount), "r"]
-      ];
-      cells.forEach(([text, cls]) => {
+      ].forEach(([text, cls]) => {
         const td = document.createElement("td");
         td.textContent = text;
         if (cls) td.className = cls;
@@ -393,66 +517,64 @@
       tbody.appendChild(tr);
     });
 
-    const cust = $("customer").value.trim();
-    $("invDear").textContent = cust ? `Dear ${cust},` : "Dear Customer,";
-    $("invTotal").textContent = TAKA + fmt(total);
+    const name = $("customer").value.trim();
+    const contact = $("contact").value.trim();
+    const address = $("address").value.trim();
+    $("invDear").textContent = name ? "Dear " + name + "," : "Dear Customer,";
+    $("btName").textContent = name;
+    $("btContact").textContent = contact;
+    $("btAddress").textContent = address;
+    $("btName").style.display = name ? "block" : "none";
+    $("btContact").style.display = contact ? "block" : "none";
+    $("btAddress").style.display = address ? "block" : "none";
+    $("billTo").style.display = (name || contact || address) ? "block" : "none";
+
     $("invDate").textContent = new Date().toLocaleDateString("en-GB", {
       day: "numeric", month: "long", year: "numeric"
     });
 
+    renderTotals(0, 0, 0, false);
+
     $("output").style.display = "block";
+    fitPreview();
     $("output").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  let currentTotal = 0;
-  function setPayMsg(t) { $("payMsg").textContent = t; }
-  function resetPayment() {
-    $("fullPaid").checked = false;
-    $("paid").disabled = false;
-    $("paid").value = "";
-    $("invStatus").innerHTML = "";
-    $("dlRow").style.display = "none";
-    setPayMsg("");
-  }
-
+  // ---- Step 2: apply discount, delivery fee and payment ----
   $("payGenerate").addEventListener("click", () => {
     setPayMsg("");
-    const total = currentTotal;
+    let discount = 0, delivery = 0;
+
+    if ($("useDiscount").checked) {
+      discount = parseFloat($("discount").value);
+      if (isNaN(discount)) discount = 0;
+      if (discount < 0) { setPayMsg("Discount cannot be negative."); return; }
+      if (discount > subTotal) { setPayMsg("Discount is more than the sub total (" + TAKA + fmt(subTotal) + ")."); return; }
+    }
+    if ($("useDelivery").checked) {
+      delivery = parseFloat($("delivery").value);
+      if (isNaN(delivery)) delivery = 0;
+      if (delivery < 0) { setPayMsg("Delivery fee cannot be negative."); return; }
+    }
+    discount = r2(discount);
+    delivery = r2(delivery);
+    const grand = r2(subTotal - discount + delivery);
+
     const fullPaid = $("fullPaid").checked;
     let paid = parseFloat($("paid").value);
     if (isNaN(paid)) paid = 0;
     if (!fullPaid && paid < 0) { setPayMsg("Paid amount cannot be negative."); return; }
-    if (!fullPaid && paid > total) {
-      setPayMsg("Paid amount is more than the total (" + TAKA + fmt(total) + ").");
+    if (!fullPaid && paid > grand) {
+      setPayMsg("Paid amount is more than the grand total (" + TAKA + fmt(grand) + ").");
       return;
     }
-    const isPaid = fullPaid || paid === total;
+    if (fullPaid) paid = grand;
+    paid = r2(paid);
 
-    const status = $("invStatus");
-    status.innerHTML = "";
-    if (isPaid) {
-      const s = document.createElement("span");
-      s.className = "stamp";
-      s.textContent = "PAID";
-      status.appendChild(s);
-    } else {
-      const box = document.createElement("div");
-      box.className = "pay-rows";
-      [["Paid amount", paid, ""], ["Due amount", Math.round((total - paid) * 100) / 100, "due"]]
-        .forEach(([label, val, cls]) => {
-          const row = document.createElement("div");
-          if (cls) row.className = cls;
-          const a = document.createElement("span");
-          a.textContent = label;
-          const b = document.createElement("span");
-          b.textContent = TAKA + fmt(val);
-          row.append(a, b);
-          box.appendChild(row);
-        });
-      status.appendChild(box);
-    }
+    renderTotals(discount, delivery, paid, paid === grand);
     $("dlRow").style.display = "flex";
-    $("invoice").scrollIntoView({ behavior: "smooth", block: "start" });
+    fitPreview();
+    $("invFit").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   $("reset").addEventListener("click", () => {
@@ -462,18 +584,29 @@
       div.querySelector(".qty").value = 1;
       div.querySelector(".price").value = "";
     });
-    $("customer").value = "";
-    $("fullPaid").checked = false;
-    $("paid").disabled = false;
-    $("paid").value = "";
+    ["customer", "contact", "address"].forEach(id => { $(id).value = ""; });
+    resetPayment();
     $("invNo").value = nextInvoiceNo();
     $("output").style.display = "none";
     setMsg("");
   });
 
+  // ---- Downloads ----
   async function capture() {
     await document.fonts.ready;
-    return html2canvas($("invoice"), { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+    return html2canvas($("invoice"), {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      onclone: doc => {
+        // undo the preview shrinking so the download is always full size
+        doc.getElementById("invScale").style.transform = "none";
+        const fit = doc.getElementById("invFit");
+        fit.style.height = "auto";
+        fit.style.width = INV_WIDTH + "px";
+        fit.style.overflow = "visible";
+      }
+    });
   }
 
   function fileStem() {
@@ -481,6 +614,8 @@
     const c = $("customer").value.trim().replace(/[^\w\-]+/g, "_");
     return "invoice_" + (no || "memo") + (c ? "_" + c : "");
   }
+
+  const DL_ERR = "Download failed. Open this page through GitHub Pages (not as a local file) so the logo can load.";
 
   $("dlPng").addEventListener("click", async () => {
     try {
@@ -490,7 +625,7 @@
       a.download = fileStem() + ".png";
       a.click();
     } catch (e) {
-      setPayMsg("Download failed. Open this page through GitHub Pages (not as a local file) so the logo can load.");
+      setPayMsg(DL_ERR);
     }
   });
 
@@ -498,15 +633,21 @@
     try {
       const canvas = await capture();
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ unit: "mm", format: "a4" });
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageW = pdf.internal.pageSize.getWidth();
-      const margin = 10;
-      const w = pageW - margin * 2;
-      const h = (canvas.height * w) / canvas.width;
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, w, h);
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 8;
+      const ratio = canvas.width / canvas.height;
+      let w = pageW - margin * 2;
+      let h = w / ratio;
+      if (h > pageH - margin * 2) {
+        h = pageH - margin * 2;
+        w = h * ratio;
+      }
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", (pageW - w) / 2, margin, w, h);
       pdf.save(fileStem() + ".pdf");
     } catch (e) {
-      setPayMsg("Download failed. Open this page through GitHub Pages (not as a local file) so the logo can load.");
+      setPayMsg(DL_ERR);
     }
   });
 </script>
