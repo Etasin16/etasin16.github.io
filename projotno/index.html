@@ -66,16 +66,25 @@
   .item:first-of-type { border-top: 0; }
   .item-head { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; }
   .item-head input { width: 20px; height: 20px; accent-color: var(--green); flex: none; }
-  .item-fields {
-    display: none;
+  .lines { display: none; }
+  .item.on .lines { display: block; }
+  .item.on .item-head { color: var(--green); }
+  .line {
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin: 8px 0 0 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
   }
-  .item.on .item-fields { display: grid; }
-  .item.on .item-head { color: var(--green); }
-  .item.bad input.price { border-color: var(--danger); }
-  .item-fields label.field { margin-bottom: 0; }
+  .line:last-child { border-bottom: 0; padding-bottom: 0; }
+  .line label.field { margin-bottom: 0; }
+  .line .full { grid-column: 1 / -1; }
+  .line-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .line-row .check { margin: 0; font-weight: 400; }
+  .line-row .btns { display: flex; gap: 8px; margin-left: auto; }
+  button.small { padding: 6px 12px; font-size: .88rem; }
+  .bad-field { border-color: var(--danger) !important; }
 
   .actions { display: flex; flex-wrap: wrap; gap: 8px; }
   button {
@@ -178,8 +187,9 @@
   .totals .due { font-weight: 700; color: #b3261e; border-top: 1px solid var(--line); }
 
   @media (max-width: 520px) {
-    .item-fields { grid-template-columns: 1fr 1fr; margin-left: 0; }
-    .item-fields label:last-child { grid-column: 1 / -1; }
+    .line { grid-template-columns: 1fr 1fr; margin-left: 0; }
+    .line .pw { grid-column: 1 / -1; }
+    .line-row .btns { margin-left: 0; }
   }
 </style>
 </head>
@@ -249,7 +259,7 @@
               <img src="Plogo.png" alt="" onerror="this.style.display='none'">
               <div>
                 <h3>Projonto Groceries</h3>
-                <p>WhatsApp: 01975-499590</p>
+                <p>WhatsApp: 01975499590</p>
               </div>
             </div>
             <div class="inv-meta">
@@ -331,33 +341,70 @@
   function setMsg(t) { $("msg").textContent = t; }
   function setPayMsg(t) { $("payMsg").textContent = t; }
 
-  // ---- Product rows ----
-  PRODUCTS.forEach(([name, weight]) => {
+  // ---- Product rows: each product can have several lines (different weight / jar or packet) ----
+  function syncRemove(item) {
+    const lines = item.querySelectorAll(".line");
+    lines.forEach(l => { l.querySelector(".rm").style.display = lines.length > 1 ? "" : "none"; });
+  }
+
+  function makeLine(item, afterLine) {
+    const isOther = item.dataset.other === "1";
+    const line = document.createElement("div");
+    line.className = "line";
+    line.innerHTML = `
+      ${isOther ? `<label class="field full">Product name
+        <input type="text" class="pname" placeholder="e.g. Black Cumin"></label>` : ""}
+      <label class="field">Quantity
+        <input type="number" class="qty" min="1" step="1" value="1" inputmode="numeric">
+      </label>
+      <label class="field">Weight
+        <input type="text" class="wt" placeholder="e.g. 100g">
+      </label>
+      <label class="field pw">Price per piece (${TAKA})
+        <input type="number" class="price" min="0" step="any" inputmode="decimal" placeholder="0">
+      </label>
+      <div class="line-row">
+        <label class="check"><input type="checkbox" class="k-jar"> Jar</label>
+        <label class="check"><input type="checkbox" class="k-packet"> Packet</label>
+        <div class="btns">
+          <button type="button" class="secondary small rm">Remove</button>
+          <button type="button" class="secondary small add">+ Add another</button>
+        </div>
+      </div>`;
+    line.querySelector(".wt").value = item.dataset.weight || "";
+
+    const jar = line.querySelector(".k-jar");
+    const packet = line.querySelector(".k-packet");
+    jar.addEventListener("change", () => { if (jar.checked) packet.checked = false; });
+    packet.addEventListener("change", () => { if (packet.checked) jar.checked = false; });
+
+    line.querySelector(".add").addEventListener("click", () => makeLine(item, line));
+    line.querySelector(".rm").addEventListener("click", () => { line.remove(); syncRemove(item); });
+
+    if (afterLine) afterLine.after(line);
+    else item.querySelector(".lines").appendChild(line);
+    syncRemove(item);
+    return line;
+  }
+
+  PRODUCTS.map(([n, w]) => [n, w, false]).concat([["Other", "", true]]).forEach(([name, weight, other]) => {
     const div = document.createElement("div");
     div.className = "item";
+    div.dataset.name = name;
+    div.dataset.weight = weight;
+    if (other) div.dataset.other = "1";
     div.innerHTML = `
       <label class="item-head">
         <input type="checkbox" class="chk">
         <span class="nm"></span>
       </label>
-      <div class="item-fields">
-        <label class="field">Quantity
-          <input type="number" class="qty" min="1" step="1" value="1" inputmode="numeric">
-        </label>
-        <label class="field">Weight
-          <input type="text" class="wt">
-        </label>
-        <label class="field">Price per piece (${TAKA})
-          <input type="number" class="price" min="0" step="any" inputmode="decimal" placeholder="0">
-        </label>
-      </div>`;
-    div.querySelector(".nm").textContent = name;
-    div.querySelector(".wt").value = weight;
+      <div class="lines"></div>`;
+    div.querySelector(".nm").textContent = other ? "Other (product not in the list)" : name;
     div.querySelector(".chk").addEventListener("change", e => {
       div.classList.toggle("on", e.target.checked);
     });
-    div.dataset.name = name;
     itemsEl.appendChild(div);
+    makeLine(div);
   });
 
   // ---- Invoice numbers: PG-YYMMDD-001, counted per day on this browser ----
@@ -462,23 +509,37 @@
     let bad = false;
     let total = 0;
 
+    document.querySelectorAll(".bad-field").forEach(el => el.classList.remove("bad-field"));
     itemsEl.querySelectorAll(".item").forEach(div => {
-      div.classList.remove("bad");
       if (!div.querySelector(".chk").checked) return;
-      const qty = parseFloat(div.querySelector(".qty").value);
-      const price = parseFloat(div.querySelector(".price").value);
-      const weight = div.querySelector(".wt").value.trim();
-      if (!(qty > 0) || !(price > 0)) {
-        div.classList.add("bad");
-        bad = true;
-        return;
-      }
-      const amount = qty * price;
-      total += amount;
-      rows.push({ name: div.dataset.name, weight, qty, price, amount });
+      div.querySelectorAll(".line").forEach(line => {
+        const qtyEl = line.querySelector(".qty");
+        const priceEl = line.querySelector(".price");
+        const nameEl = line.querySelector(".pname");
+        const qty = parseFloat(qtyEl.value);
+        const price = parseFloat(priceEl.value);
+        let name = div.dataset.name;
+        let ok = true;
+        if (nameEl) {
+          name = nameEl.value.trim();
+          if (!name) { nameEl.classList.add("bad-field"); ok = false; }
+        }
+        if (!(qty > 0)) { qtyEl.classList.add("bad-field"); ok = false; }
+        if (!(price > 0)) { priceEl.classList.add("bad-field"); ok = false; }
+        if (!ok) { bad = true; return; }
+        const kind = line.querySelector(".k-jar").checked ? "Jar"
+                   : line.querySelector(".k-packet").checked ? "Packet" : "";
+        const amount = qty * price;
+        total += amount;
+        rows.push({
+          name: kind ? name + " (" + kind + ")" : name,
+          weight: line.querySelector(".wt").value.trim(),
+          qty, price, amount
+        });
+      });
     });
 
-    if (bad) { setMsg("Enter a quantity and a price above 0 for every selected product."); return; }
+    if (bad) { setMsg("Fill in the product name (for Other), a quantity and a price above 0 on every selected line."); return; }
     if (!rows.length) { setMsg("Select at least one product."); return; }
 
     const invNo = $("invNo").value.trim();
@@ -582,11 +643,12 @@
 
   $("reset").addEventListener("click", () => {
     itemsEl.querySelectorAll(".item").forEach(div => {
-      div.classList.remove("on", "bad");
+      div.classList.remove("on");
       div.querySelector(".chk").checked = false;
-      div.querySelector(".qty").value = 1;
-      div.querySelector(".price").value = "";
+      div.querySelector(".lines").innerHTML = "";
+      makeLine(div);
     });
+    document.querySelectorAll(".bad-field").forEach(el => el.classList.remove("bad-field"));
     ["customer", "contact", "address"].forEach(id => { $(id).value = ""; });
     resetPayment();
     $("invNo").value = nextInvoiceNo();
