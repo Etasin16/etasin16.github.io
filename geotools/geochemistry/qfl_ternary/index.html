@@ -5,203 +5,596 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png" />
 <link rel="apple-touch-icon" href="/favicon.png" />
-<meta name="theme-color" content="#14120F" />
-<title>QFL Ternary Diagram — Eaftada</title>
-<meta name="description" content="Classify sandstones by quartz–feldspar–lithic composition on a QFL ternary diagram — runs entirely in your browser via PyScript.">
+<meta name="theme-color" content="#FFFFFF" />
+<title>QFL Ternary & Provenance — Eaftada</title>
+<meta name="description" content="QFL ternary diagram with Dickinson provenance fields, multiple sections with custom markers/colors, and optional Suttner & Dutta (1986) paleoclimate interpretation.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
 <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
 
 <style>
 :root{
-  --basalt:#14120F; --basalt-2:#1C1914; --basalt-3:#221E17;
-  --limestone:#EDE6D6; --limestone-70:rgba(237,230,214,.7); --limestone-45:rgba(237,230,214,.45);
-  --hairline:rgba(237,230,214,.12); --hairline-str:rgba(237,230,214,.22);
-  --rust:#C06736; --ochre:#D9B23C; --malachite:#5C9683; --slate:#7A8FA6;
+  --bg:#FFFFFF; --bg-alt:#F7F6F2; --bg-alt2:#F0EEE7;
+  --text:#1A1816; --text-dim:#6B6560; --text-faint:#9A948B;
+  --border:#E4E0D8; --border-str:#D2CCC0;
+  --accent:#B6552B; --accent-hover:#9C4A24; --accent-soft:#F6E9E0;
   --display:'Zilla Slab',Georgia,serif; --body:'Public Sans',-apple-system,sans-serif; --mono:'IBM Plex Mono','Courier New',monospace;
 }
 *{ box-sizing:border-box; }
-body{ margin:0; background:var(--basalt); color:var(--limestone); font-family:var(--body); line-height:1.6; }
+body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--body); line-height:1.6; }
 h1,h2,h3{ font-family:var(--display); margin:0; }
 a{ color:inherit; }
-:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
-.eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--limestone-45); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); }
 
-header{ border-bottom:1px solid var(--hairline); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
-.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; }
-.brand span{ color:var(--rust); }
-.crumb{ font-family:var(--mono); font-size:12px; color:var(--limestone-45); }
-.crumb a{ text-decoration:none; color:var(--limestone-70); }
-.crumb a:hover{ color:var(--ochre); }
+header{ border-bottom:1px solid var(--border); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.brand{ font-family:var(--display); font-weight:600; font-size:17px; text-decoration:none; color:var(--text); }
+.brand span{ color:var(--accent); }
+.crumb{ font-family:var(--mono); font-size:12px; color:var(--text-faint); }
+.crumb a{ text-decoration:none; color:var(--text-dim); }
+.crumb a:hover{ color:var(--accent); }
 
-main{ max-width:1180px; margin:0 auto; padding:48px 32px 100px; }
-.title-block{ margin-bottom:32px; max-width:700px; }
-.title-block h1{ font-size:clamp(30px,4vw,42px); margin:10px 0 12px; }
-.title-block p{ color:var(--limestone-70); font-size:15px; }
+main{ max-width:1120px; margin:0 auto; padding:48px 32px 100px; }
+.title-block{ margin-bottom:32px; max-width:720px; }
+.title-block h1{ font-size:clamp(28px,3.6vw,38px); margin:10px 0 12px; font-weight:600; }
+.title-block p{ color:var(--text-dim); font-size:14.5px; }
 
-.layout{ display:grid; grid-template-columns:340px 1fr; gap:28px; align-items:start; }
-@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+.panel{ background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:26px; margin-bottom:24px; }
+.panel h3{ font-size:12.5px; margin-bottom:14px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); font-weight:500; }
+.panel p.hint{ font-size:12.5px; color:var(--text-faint); margin:0 0 14px; }
 
-.panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
-.panel h3{ font-size:13px; margin-bottom:16px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--limestone-45); }
-
-.field{ display:flex; flex-direction:column; gap:4px; margin-bottom:14px; }
-.field label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--limestone-45); }
-input{
-  background:var(--basalt-3); border:1px solid var(--hairline-str); color:var(--limestone);
-  border-radius:4px; padding:9px 10px; font-family:var(--mono); font-size:13px; width:100%;
+.checkbox-row{
+  display:flex; align-items:flex-start; gap:12px; padding:14px 16px; background:var(--bg-alt);
+  border:1px solid var(--border); border-radius:6px; margin-bottom:22px; cursor:pointer;
 }
-input:focus{ border-color:var(--ochre); outline:none; }
+.checkbox-row input{ margin-top:3px; width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+.checkbox-row div b{ display:block; font-family:var(--display); font-size:14.5px; font-weight:600; }
+.checkbox-row div span{ font-size:12.5px; color:var(--text-dim); }
+
+/* section blocks */
+.section-block{ border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:16px; background:var(--bg-alt); }
+.section-head{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+.section-name{
+  font-family:var(--display); font-size:14.5px; font-weight:600; border:1px solid var(--border-str);
+  border-radius:5px; padding:8px 10px; background:var(--bg); color:var(--text); flex:1; min-width:140px;
+}
+.section-name:focus{ border-color:var(--accent); outline:none; }
+.marker-select{
+  font-family:var(--mono); font-size:12px; border:1px solid var(--border-str); border-radius:5px;
+  padding:8px 10px; background:var(--bg); color:var(--text); cursor:pointer;
+}
+.color-input{ width:38px; height:36px; border:1px solid var(--border-str); border-radius:5px; padding:2px; background:var(--bg); cursor:pointer; }
+.remove-section-btn{ font-size:11px; padding:8px 13px; }
+
+.toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.file-label{
+  font-family:var(--mono); font-size:11.5px; padding:9px 14px; border-radius:5px; border:1px solid var(--border-str);
+  color:var(--text-dim); cursor:pointer; background:var(--bg); display:inline-block;
+}
+.file-label:hover{ border-color:var(--accent); color:var(--accent); }
+input[type="file"]{ display:none; }
+
+table.input-table{ width:100%; border-collapse:collapse; margin-bottom:10px; }
+table.input-table th{
+  text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--text-faint); font-weight:500; padding:0 8px 8px; border-bottom:1px solid var(--border-str);
+}
+table.input-table td{ padding:4px 8px 4px 0; border-bottom:1px solid var(--border); }
+table.input-table input.cell-input{
+  width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+  border-radius:4px; padding:8px 9px; font-family:var(--mono); font-size:12.5px;
+}
+table.input-table input.cell-input:focus{ border-color:var(--accent); outline:none; }
+.row-del{
+  background:none; border:1px solid var(--border); color:var(--text-faint); border-radius:4px;
+  width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1;
+}
+.row-del:hover{ border-color:var(--accent); color:var(--accent); }
 
 .btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
-  font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:12px 18px; border-radius:5px;
-  cursor:pointer; border:1px solid var(--rust); background:var(--rust); color:var(--basalt); font-weight:500;
-  margin-top:6px; transition:background .2s ease;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:var(--mono); font-size:12px; letter-spacing:.03em; padding:11px 20px; border-radius:5px;
+  cursor:pointer; border:1px solid var(--accent); background:var(--accent); color:#fff; font-weight:500;
+  transition:background .2s ease;
 }
-.btn:hover{ background:#D3763F; }
+.btn:hover{ background:var(--accent-hover); }
+.btn--ghost{ background:none; color:var(--text-dim); border-color:var(--border-str); }
+.btn--ghost:hover{ border-color:var(--accent); color:var(--accent); background:none; }
+.dl-btn{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px;
+  padding:8px 13px; border-radius:5px; border:1px solid var(--border-str); color:var(--text-dim);
+  text-decoration:none; margin-top:10px;
+}
+.dl-btn:hover{ border-color:var(--accent); color:var(--accent); }
 
-.status{ font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); margin-top:12px; }
-.status.err{ color:var(--rust); }
+.status{ font-family:var(--mono); font-size:11.5px; color:var(--text-faint); margin-top:10px; }
+.status.err{ color:var(--accent); }
 
-.plot-panel{ background:var(--basalt-2); border:1px solid var(--hairline); border-radius:8px; padding:28px; display:flex; flex-direction:column; align-items:center; gap:18px; }
-#ternaryDiagram svg{ max-width:100%; height:auto; }
-.result-strip{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
-.result-chip{ font-family:var(--mono); font-size:12px; padding:8px 14px; border-radius:16px; background:var(--basalt-3); border:1px solid var(--hairline-str); }
-.result-headline{ font-family:var(--display); font-size:24px; color:var(--ochre); }
+.plot-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+@media (max-width:860px){ .plot-grid{ grid-template-columns:1fr; } }
+.plot-card{ background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:18px; }
+.plot-card h4{ font-family:var(--display); color:var(--text); font-size:14.5px; margin-bottom:10px; font-weight:600; }
+.plot-card img{ width:100%; height:auto; display:block; border-radius:4px; }
 
-footer{ border-top:1px solid var(--hairline); padding:28px 32px; font-family:var(--mono); font-size:11.5px; color:var(--limestone-45); }
+table.result-table{ width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px; }
+table.result-table th, table.result-table td{ text-align:right; padding:8px 10px; border-bottom:1px solid var(--border); font-family:var(--mono); }
+table.result-table th:first-child, table.result-table td:first-child,
+table.result-table th:nth-child(2), table.result-table td:nth-child(2){ text-align:left; }
+table.result-table th{ font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); font-weight:500; }
+
+footer{ border-top:1px solid var(--border); padding:28px 32px; font-family:var(--mono); font-size:11px; color:var(--text-faint); }
+
+py-terminal, .py-terminal, #pyscript-terminal, [class*="pyscript-terminal"]{ display:none !important; }
 </style>
 </head>
 <body>
 
 <header>
   <a href="/" class="brand">EAFTADA<span>.COM</span></a>
-  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/geochemistry/">Geochemistry</a> / QFL Ternary Diagram</span>
+  <span class="crumb"><a href="/">Home</a> / <a href="/geotools/">Geotoolbox</a> / <a href="/geotools/geochemistry/">Geochemistry</a> / QFL Ternary &amp; Provenance</span>
 </header>
 
 <main>
   <div class="title-block">
     <span class="eyebrow">Geochemistry / Sedimentary Petrology · Runs entirely in your browser · PyScript</span>
-    <h1>QFL Ternary Diagram</h1>
-    <p>Enter modal percentages of quartz, feldspar, and lithic fragments (point-counted or estimated) to plot and classify a sandstone using the standard 5-field QFL diagram.</p>
+    <h1>QFL Ternary &amp; Provenance</h1>
+    <p>Plot one or more sample sets on a QFL ternary diagram and the Dickinson provenance-field diagram, each with its own marker and color. Optionally add a Suttner &amp; Dutta (1986) paleoclimate interpretation plot alongside it.</p>
   </div>
 
-  <div class="layout">
-    <div class="panel">
-      <h3>Modal composition</h3>
-      <div class="field"><label>Quartz (Q) %</label><input type="number" id="qVal" value="82" min="0" max="100"></div>
-      <div class="field"><label>Feldspar (F) %</label><input type="number" id="fVal" value="10" min="0" max="100"></div>
-      <div class="field"><label>Lithics (L) %</label><input type="number" id="lVal" value="8" min="0" max="100"></div>
-      <button class="btn" id="plotBtn">Plot &amp; classify</button>
-      <div class="status" id="status">Values are normalized to 100% automatically.</div>
-    </div>
+  <div class="panel">
+    <label class="checkbox-row" for="paleoCheck">
+      <input type="checkbox" id="paleoCheck">
+      <div>
+        <b>Include Paleoclimate interpretation (Suttner &amp; Dutta, 1986)</b>
+        <span>Needs monocrystalline and polycrystalline quartz counted separately (Qm, Qp).</span>
+      </div>
+    </label>
 
-    <div class="plot-panel">
-      <div class="result-headline" id="resultHeadline">Quartz Arenite</div>
-      <div id="ternaryDiagram"></div>
-      <div class="result-strip" id="resultStrip"></div>
+
+    <div id="sectionsContainer"></div>
+    <button class="btn btn--ghost" id="addSectionBtn" type="button" style="margin-bottom:22px;">+ Add section</button>
+
+    <div>
+      <button class="btn" id="plotBtn">Generate plots</button>
     </div>
+    <div class="status" id="status">Loading matplotlib — first load can take 5–15 seconds…</div>
+  </div>
+
+  <div class="plot-grid" id="plotGrid"></div>
+  <div id="paleoWrap"></div>
+
+  <div class="panel" id="tablePanel" style="display:none;">
+    <h3>Computed table</h3>
+    <div id="tableHost"></div>
+    <a class="dl-btn" id="csvBtn" href="#" download="qfl_data.csv">Download CSV</a>
   </div>
 </main>
 
 <footer>
-  Runs client-side via PyScript (Pyodide). No server, no data leaves your browser. Classification follows the standard simplified 5-field QFL scheme (after Folk).
+  Runs client-side via PyScript (Pyodide + matplotlib). No server, no data leaves your browser. Provenance fields after Dickinson; paleoclimate zones after Suttner &amp; Dutta (1986).
 </footer>
 
-<script type="py">
-import math
+<script>
+// ---------- all section/table/CSV management lives in plain JS ----------
+// (kept out of Python so it works reliably for elements added after page load)
+let sectionCounter = 0;
+const DEFAULT_COLORS = ['#B6552B', '#5C7A9C', '#5C9683', '#C9A227', '#8C6FA6', '#4A8C8C'];
+const MARKERS = [['o', '● Circle'], ['^', '▲ Triangle'], ['s', '■ Square'], ['D', '◆ Diamond'], ['x', '✕ Cross']];
+
+function colNames(){
+  return document.getElementById('paleoCheck').checked
+    ? ['Qm', 'Qp', 'Feldspar', 'Lithics']
+    : ['Quartz', 'Feldspar', 'Lithics'];
+}
+
+function addRowToTbody(tbody, values){
+  const names = colNames();
+  const tr = document.createElement('tr');
+  let cells = '';
+  for (let i = 0; i < names.length; i++){
+    const v = values ? values[i] : '';
+    cells += `<td><input type="number" class="cell-input" step="any" value="${v}"></td>`;
+  }
+  tr.innerHTML = cells + `<td><button type="button" class="row-del">\u00d7</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelector('.row-del').addEventListener('click', () => tr.remove());
+}
+
+function rebuildSectionTable(block, valuesList){
+  const names = colNames();
+  const thead = block.querySelector('.table-head');
+  thead.innerHTML = names.map(n => `<th>${n}</th>`).join('') + '<th></th>';
+  const tbody = block.querySelector('.input-rows');
+  tbody.innerHTML = '';
+  if (valuesList && valuesList.length){
+    valuesList.forEach(v => addRowToTbody(tbody, v));
+  } else {
+    for (let i = 0; i < 5; i++) addRowToTbody(tbody, null);
+  }
+}
+
+function createSectionBlock(isFirst){
+  sectionCounter += 1;
+  const id = sectionCounter;
+  const color = DEFAULT_COLORS[(id - 1) % DEFAULT_COLORS.length];
+
+  const block = document.createElement('div');
+  block.className = 'section-block';
+  block.dataset.sectionId = id;
+  block.innerHTML = `
+    <div class="section-head">
+      <input type="text" class="section-name" value="Section ${id}">
+      <select class="marker-select">
+        ${MARKERS.map(([code, label]) => `<option value="${code}">${label}</option>`).join('')}
+      </select>
+      <input type="color" class="color-input" value="${color}">
+      <button type="button" class="remove-section-btn btn btn--ghost">Remove section</button>
+    </div>
+    <div class="toolbar">
+      <label class="file-label">Upload CSV →<input type="file" class="csv-file" accept=".csv"></label>
+      <span class="status upload-status"></span>
+    </div>
+    <table class="input-table">
+      <thead><tr class="table-head"></tr></thead>
+      <tbody class="input-rows"></tbody>
+    </table>
+    <button type="button" class="add-row-btn btn btn--ghost">+ Add row</button>
+  `;
+  document.getElementById('sectionsContainer').appendChild(block);
+  rebuildSectionTable(block, null);
+
+  block.querySelector('.add-row-btn').addEventListener('click', () => {
+    addRowToTbody(block.querySelector('.input-rows'), null);
+  });
+
+  block.querySelector('.remove-section-btn').addEventListener('click', () => {
+    if (document.querySelectorAll('.section-block').length <= 1){
+      alert('At least one section is required.');
+      return;
+    }
+    block.remove();
+  });
+
+  block.querySelector('.csv-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+      const names = colNames();
+      const status = block.querySelector('.upload-status');
+      if (!lines.length){
+        status.className = 'status err'; status.innerText = 'Empty file.'; return;
+      }
+      const firstCells = lines[0].split(',').map(s => s.trim());
+      const firstNumeric = firstCells.length > 0 && firstCells.every(c => c !== '' && !isNaN(parseFloat(c)));
+      const dataLines = firstNumeric ? lines : lines.slice(1);
+      const values = dataLines
+        .map(l => l.split(',').map(s => parseFloat(s.trim())))
+        .filter(arr => arr.length >= names.length && arr.slice(0, names.length).every(v => !isNaN(v)))
+        .map(arr => arr.slice(0, names.length));
+      if (values.length === 0){
+        status.className = 'status err';
+        status.innerText = "Couldn't find valid numeric rows in that CSV.";
+        return;
+      }
+      rebuildSectionTable(block, values);
+      status.className = 'status';
+      status.innerText = `Loaded ${values.length} row(s).`;
+    };
+    reader.readAsText(file);
+  });
+
+  if (isFirst) block.querySelector('.remove-section-btn').style.display = 'none';
+  return block;
+}
+
+document.getElementById('addSectionBtn').addEventListener('click', () => createSectionBlock(false));
+document.getElementById('paleoCheck').addEventListener('change', () => {
+  document.querySelectorAll('.section-block').forEach(block => rebuildSectionTable(block, null));
+});
+
+createSectionBlock(true);
+</script>
+
+<script type="py" config='{"packages": ["matplotlib"], "terminal": false}'>
+import warnings
+warnings.filterwarnings("ignore")
+import io, base64, math
+import matplotlib
+matplotlib.use("AGG")
+import matplotlib.pyplot as plt
+from matplotlib.ticker import LogLocator, FuncFormatter
 from pyscript import document, when
 
-def classify(q, f, l):
-    if q >= 95:
-        return "Quartz Arenite"
-    if q >= 75:
-        return "Subarkose" if f >= l else "Sublitharenite"
-    return "Arkose" if f >= l else "Litharenite"
+def set_status(msg, is_err=False):
+    el = document.getElementById("status")
+    el.innerText = msg
+    el.className = "status err" if is_err else "status"
 
-def ternary_svg(q, f, l, size=420):
-    pad = 50
-    side = size - 2*pad
-    h = side * math.sqrt(3) / 2
-    Qx, Qy = pad + side/2, pad
-    Fx, Fy = pad, pad + h
-    Lx, Ly = pad + side, pad + h
+set_status("Ready.")
 
-    def bary(qf, ff, lf):
-        x = qf*Qx + ff*Fx + lf*Lx
-        y = qf*Qy + ff*Fy + lf*Ly
-        return x, y
+# ---------- matplotlib ternary frame ----------
+QX, QY = 0.5, 3 ** 0.5 / 2
+FX, FY = 0.0, 0.0
+LX, LY = 1.0, 0.0
 
-    def const_q_line(c):
-        p1 = bary(c, 1-c, 0)
-        p2 = bary(c, 0, 1-c)
-        return p1, p2
+def bary(q, f, l):
+    return q*QX + f*FX + l*LX, q*QY + f*FY + l*LY
 
-    px, py = bary(q/100, f/100, l/100)
+def draw_ternary_frame(ax, labels=("Quartz", "Feldspar", "Lithics")):
+    ax.plot([QX, FX, LX, QX], [QY, FY, LY, QY], color="#2A2622", linewidth=1.3, zorder=3)
 
-    parts = [f'<svg viewBox="0 0 {size} {size}" xmlns="http://www.w3.org/2000/svg">']
-    parts.append(f'<polygon points="{Qx:.1f},{Qy:.1f} {Fx:.1f},{Fy:.1f} {Lx:.1f},{Ly:.1f}" fill="none" stroke="#EDE6D6" stroke-width="1.5"/>')
+    for c in [0.2, 0.4, 0.6, 0.8]:
+        p1, p2 = bary(c, 1-c, 0), bary(c, 0, 1-c)
+        ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color="#CFCAC0", linewidth=0.6, linestyle="--", zorder=1)
+        p1, p2 = bary(1-c, c, 0), bary(0, c, 1-c)
+        ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color="#CFCAC0", linewidth=0.6, linestyle="--", zorder=1)
+        p1, p2 = bary(1-c, 0, c), bary(0, 1-c, c)
+        ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color="#CFCAC0", linewidth=0.6, linestyle="--", zorder=1)
 
-    for c, lbl in [(0.95, "95"), (0.75, "75")]:
-        p1, p2 = const_q_line(c)
-        parts.append(f'<line x1="{p1[0]:.1f}" y1="{p1[1]:.1f}" x2="{p2[0]:.1f}" y2="{p2[1]:.1f}" stroke="#D9B23C" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>')
+    # smaller apex labels
+    ax.text(QX, QY+0.055, labels[0], ha="center", va="bottom", fontsize=9, fontweight="bold", color="#1A1816")
+    ax.text(FX-0.06, FY-0.02, labels[1], ha="right", va="top", fontsize=9, fontweight="bold", color="#1A1816")
+    ax.text(LX+0.06, LY-0.02, labels[2], ha="left", va="top", fontsize=9, fontweight="bold", color="#1A1816")
 
-    mx, my = bary(0, 0.5, 0.5)
-    parts.append(f'<line x1="{Qx:.1f}" y1="{Qy:.1f}" x2="{mx:.1f}" y2="{my:.1f}" stroke="#D9B23C" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>')
+    for c in [0, 0.2, 0.4, 0.6, 0.8, 1.0]:
+        val = int(c*100)
+        p = bary(0, 1-c, c)
+        ax.text(p[0], p[1]-0.04, f"{val}", ha="center", va="top", fontsize=7, color="#9A948B")
+        p = bary(1-c, c, 0)
+        ax.text(p[0]-0.03, p[1], f"{val}", ha="right", va="center", fontsize=7, color="#9A948B")
+        p = bary(1-c, 0, c)
+        ax.text(p[0]+0.03, p[1], f"{val}", ha="left", va="center", fontsize=7, color="#9A948B")
 
-    parts.append(f'<text x="{Qx:.1f}" y="{Qy-14:.1f}" fill="#C06736" font-family="IBM Plex Mono" font-size="14" text-anchor="middle">Q</text>')
-    parts.append(f'<text x="{Fx-18:.1f}" y="{Fy+8:.1f}" fill="#5C9683" font-family="IBM Plex Mono" font-size="14" text-anchor="middle">F</text>')
-    parts.append(f'<text x="{Lx+18:.1f}" y="{Ly+8:.1f}" fill="#7A8FA6" font-family="IBM Plex Mono" font-size="14" text-anchor="middle">L</text>')
+    ax.set_xlim(-0.28, 1.28); ax.set_ylim(-0.16, 1.05)
+    ax.set_aspect("equal"); ax.axis("off")
 
-    labels = [
-        (0.98, 0.01, 0.01, "Quartz\\nArenite"),
-        (0.83, 0.13, 0.04, "Subarkose"),
-        (0.83, 0.04, 0.13, "Sublitharenite"),
-        (0.35, 0.45, 0.20, "Arkose"),
-        (0.35, 0.20, 0.45, "Litharenite"),
-    ]
-    for qf, ff, lf, text in labels:
-        lx, ly = bary(qf, ff, lf)
-        for i, line in enumerate(text.split("\\n")):
-            parts.append(f'<text x="{lx:.1f}" y="{ly+i*11:.1f}" fill="#EDE6D6" opacity="0.5" font-family="IBM Plex Mono" font-size="9.5" text-anchor="middle">{line}</text>')
+def fig_to_b64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=160, bbox_inches="tight", facecolor="#FFFFFF")
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode("utf-8")
 
-    parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="6" fill="#D9B23C" stroke="#14120F" stroke-width="1.5"/>')
+def plot_basic_ternary(sections):
+    fig, ax = plt.subplots(figsize=(5, 4.6))
+    fig.patch.set_facecolor("#FFFFFF")
+    draw_ternary_frame(ax)
+    for sec in sections:
+        xs, ys = [], []
+        for q, f, l in zip(sec["pctQ"], sec["pctF"], sec["pctL"]):
+            x, y = bary(q/100, f/100, l/100)
+            xs.append(x); ys.append(y)
+        # smaller sample markers
+        ax.scatter(xs, ys, s=16, marker=sec["marker"], color=sec["color"],
+                   edgecolor="#1A1816", linewidth=0.6, zorder=5, label=sec["name"])
+    ax.legend(fontsize="small", loc="upper right", frameon=False)
+    return fig_to_b64(fig)
 
-    parts.append('</svg>')
-    return ''.join(parts)
+FIELDS = {
+    "Basement Uplift": [(100,0,0),(0,100,0),(0,85,15),(96,0,4)],
+    "Recycled Orogen": [(25,0,75),(51,40,9),(96,0,4)],
+    "Undissected Arc": [(0,50,50),(25,0,75),(0,0,100)],
+    "Transitional Arc": [(0,50,50),(25,0,75),(33,12,55),(17,70,13),(0,85,15)],
+    "Dissected Arc": [(51,40,9),(17,70,13),(33,12,55)],
+}
+FIELD_COLORS = {
+    "Basement Uplift": "#F3EAC2", "Recycled Orogen": "#AFD4E8",
+    "Undissected Arc": "#B9EAEA", "Transitional Arc": "#C7E8C0", "Dissected Arc": "#C9DCF2",
+}
+
+def plot_provenance_ternary(sections):
+    fig, ax = plt.subplots(figsize=(5, 4.6))
+    fig.patch.set_facecolor("#FFFFFF")
+    draw_ternary_frame(ax)
+    for label, verts in FIELDS.items():
+        xs_f, ys_f = [], []
+        for q, f, l in verts:
+            x, y = bary(q/100, f/100, l/100)
+            xs_f.append(x); ys_f.append(y)
+        ax.fill(xs_f, ys_f, label=label, alpha=0.6, color=FIELD_COLORS[label], zorder=2)
+    for sec in sections:
+        xs, ys = [], []
+        for q, f, l in zip(sec["pctQ"], sec["pctF"], sec["pctL"]):
+            x, y = bary(q/100, f/100, l/100)
+            xs.append(x); ys.append(y)
+        ax.scatter(xs, ys, s=16, marker=sec["marker"], color=sec["color"],
+                   edgecolor="#1A1816", linewidth=0.6, zorder=5, label=sec["name"])
+    ax.legend(fontsize="x-small", loc="upper left", bbox_to_anchor=(0.80, 1.08), frameon=False)
+    return fig_to_b64(fig)
+
+def plot_paleoclimate(sections):
+    fig, ax = plt.subplots(figsize=(7, 6.5))
+    fig.patch.set_facecolor("#FFFFFF")
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_xlim(0.1, 200); ax.set_ylim(0.001, 1)
+    ax.xaxis.set_major_locator(LogLocator(base=10))
+    ax.yaxis.set_major_locator(LogLocator(base=10))
+    ax.xaxis.set_minor_locator(LogLocator(base=10, subs=range(2, 10)))
+    ax.yaxis.set_minor_locator(LogLocator(base=10, subs=range(2, 10)))
+
+    def log_label(value, position):
+        if value <= 0: return ""
+        exponent = round(math.log10(value))
+        if math.isclose(value, 10 ** exponent, rel_tol=1e-8):
+            return f"{value:g}"
+        return ""
+    ax.xaxis.set_major_formatter(FuncFormatter(log_label))
+    ax.yaxis.set_major_formatter(FuncFormatter(log_label))
+
+    ax.grid(True, which="major", axis="both", color="gray", alpha=0.28, linewidth=0.7, zorder=0)
+    ax.grid(True, which="minor", axis="both", color="gray", alpha=0.13, linewidth=0.45, zorder=0)
+
+    for sec in sections:
+        xs = [q/(f+l) for q, f, l in zip(sec["Q"], sec["F"], sec["L"])]
+        ys = [qp/(f+l) for qp, f, l in zip(sec["Qp"], sec["F"], sec["L"])]
+        ax.scatter(xs, ys, s=24, marker=sec["marker"], facecolors=sec["color"],
+                   edgecolors="#1A1816", linewidths=0.7, zorder=5, label=sec["name"])
+
+    ax.plot([0.60, 3.20], [0.018, 0.007], color="black", linewidth=1.8, zorder=2)
+    ax.plot([1.50, 6.50], [0.050, 0.018], color="black", linewidth=1.8, zorder=2)
+    ax.plot([7.50, 25.0], [0.200, 0.045], color="black", linewidth=1.8, zorder=2)
+
+    ax.text(0.80, 0.0075, "ARID", fontsize=11, ha="left", va="center")
+    ax.text(1.70, 0.014, "SEMI ARID", fontsize=11, ha="left", va="center")
+    ax.text(4.80, 0.038, "SEMI HUMID", fontsize=11, ha="left", va="center")
+    ax.text(35.0, 0.075, "HUMID", fontsize=11, ha="left", va="center")
+
+    ax.annotate("", xy=(48, 0.032), xytext=(4.5, 0.0035),
+                arrowprops=dict(arrowstyle="-|>", linewidth=2.0, edgecolor="black", facecolor="white", mutation_scale=18),
+                zorder=3)
+    ax.text(8.0, 0.0048, "Increasing weathering", rotation=43, fontsize=10, ha="center", va="center")
+
+    ax.set_xlabel("Q/(F+L)", fontsize=12)
+    ax.set_ylabel("Qp/(F+L)", fontsize=12)
+    ax.set_title("Paleoclimate interpretation (Suttner & Dutta, 1986)", fontsize=12)
+    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True)
+    ax.tick_params(which="major", length=6)
+    ax.tick_params(which="minor", length=3)
+    for spine in ax.spines.values():
+        spine.set_linewidth(1.2)
+    ax.legend(fontsize="small", loc="lower right", frameon=False)
+
+    return fig_to_b64(fig)
+
+def csv_b64(header, rows):
+    lines = [",".join(header)]
+    for r in rows:
+        lines.append(",".join(str(v) for v in r))
+    text = "\n".join(lines)
+    return base64.b64encode(text.encode("utf-8")).decode("utf-8")
+
+def read_all_sections():
+    use_paleo = document.getElementById("paleoCheck").checked
+    n_cols = 4 if use_paleo else 3
+    out = []
+    for block in document.querySelectorAll(".section-block"):
+        name = block.querySelector(".section-name").value.strip() or "Section"
+        marker = block.querySelector(".marker-select").value
+        color = block.querySelector(".color-input").value
+        rows = []
+        for tr in block.querySelectorAll(".input-rows tr"):
+            inputs = tr.querySelectorAll("input.cell-input")
+            vals = []
+            ok = True
+            for inp in inputs:
+                v = inp.value.strip()
+                if v == "":
+                    ok = False
+                    break
+                try:
+                    vals.append(float(v))
+                except ValueError:
+                    ok = False
+                    break
+            if ok and len(vals) == n_cols:
+                rows.append(vals)
+        out.append({"name": name, "marker": marker, "color": color, "rows": rows})
+    return use_paleo, out
 
 @when("click", "#plotBtn")
-def plot(event):
-    status = document.getElementById("status")
+def generate(event):
+    use_paleo, raw_sections = read_all_sections()
+    plot_grid = document.getElementById("plotGrid")
+    paleo_wrap = document.getElementById("paleoWrap")
+    table_panel = document.getElementById("tablePanel")
+    plot_grid.innerHTML = ""
+    paleo_wrap.innerHTML = ""
+
     try:
-        q = float(document.getElementById("qVal").value)
-        f = float(document.getElementById("fVal").value)
-        l = float(document.getElementById("lVal").value)
-        total = q + f + l
-        if total <= 0:
-            raise ValueError("totals must be greater than 0")
-        qn, fn, ln = q/total*100, f/total*100, l/total*100
+        sections = []
+        for sec in raw_sections:
+            rows = sec["rows"]
+            if not rows:
+                continue
+            if use_paleo:
+                Qm = [r[0] for r in rows]; Qp = [r[1] for r in rows]
+                F = [r[2] for r in rows]; L = [r[3] for r in rows]
+                Q = [a+b for a, b in zip(Qm, Qp)]
+            else:
+                Q = [r[0] for r in rows]; F = [r[1] for r in rows]; L = [r[2] for r in rows]
+                Qp = None
 
-        rock = classify(qn, fn, ln)
-        document.getElementById("resultHeadline").innerText = rock
-        document.getElementById("ternaryDiagram").innerHTML = ternary_svg(qn, fn, ln)
-        document.getElementById("resultStrip").innerHTML = (
-            f'<span class="result-chip">Q {qn:.1f}%</span>'
-            f'<span class="result-chip">F {fn:.1f}%</span>'
-            f'<span class="result-chip">L {ln:.1f}%</span>'
+            totals = [q+f+l for q, f, l in zip(Q, F, L)]
+            if any(t <= 0 for t in totals):
+                raise ValueError(f"section '{sec['name']}': Q+F+L must be greater than 0 for every sample")
+            pctQ = [q/t*100 for q, t in zip(Q, totals)]
+            pctF = [f/t*100 for f, t in zip(F, totals)]
+            pctL = [l/t*100 for l, t in zip(L, totals)]
+
+            sections.append({
+                "name": sec["name"], "marker": sec["marker"], "color": sec["color"],
+                "pctQ": pctQ, "pctF": pctF, "pctL": pctL, "Q": Q, "F": F, "L": L, "Qp": Qp,
+            })
+
+        if not sections:
+            raise ValueError("add at least one complete data row in at least one section")
+
+        b64_basic = plot_basic_ternary(sections)
+        b64_prov = plot_provenance_ternary(sections)
+
+        plot_grid.innerHTML = f'''
+          <div class="plot-card">
+            <h4>QFL Ternary</h4>
+            <img src="data:image/png;base64,{b64_basic}">
+            <a class="dl-btn" href="data:image/png;base64,{b64_basic}" download="qfl_ternary.png">Download PNG</a>
+          </div>
+          <div class="plot-card">
+            <h4>Provenance Fields (Dickinson)</h4>
+            <img src="data:image/png;base64,{b64_prov}">
+            <a class="dl-btn" href="data:image/png;base64,{b64_prov}" download="qfl_provenance.png">Download PNG</a>
+          </div>
+        '''
+
+        out_header = ["Section", "Sample", "%Q", "%F", "%L"]
+        if use_paleo:
+            out_header += ["Qp/(F+L)", "Q/(F+L)"]
+        csv_rows = []
+        table_rows = ""
+
+        for sec in sections:
+            for i in range(len(sec["pctQ"])):
+                cells = [f"<td>{sec['name']}</td>", f"<td>{i+1}</td>",
+                         f"<td>{sec['pctQ'][i]:.2f}</td>", f"<td>{sec['pctF'][i]:.2f}</td>", f"<td>{sec['pctL'][i]:.2f}</td>"]
+                row = [sec["name"], i+1, f"{sec['pctQ'][i]:.2f}", f"{sec['pctF'][i]:.2f}", f"{sec['pctL'][i]:.2f}"]
+                if use_paleo:
+                    fl = sec["F"][i] + sec["L"][i]
+                    if fl <= 0 or sec["Q"][i] <= 0 or sec["Qp"][i] <= 0:
+                        raise ValueError(f"section '{sec['name']}' sample {i+1}: F+L, Q and Qp must all be greater than 0")
+                    x = sec["Q"][i] / fl
+                    y = sec["Qp"][i] / fl
+                    cells += [f"<td>{y:.4f}</td>", f"<td>{x:.4f}</td>"]
+                    row += [f"{y:.4f}", f"{x:.4f}"]
+                table_rows += "<tr>" + "".join(cells) + "</tr>"
+                csv_rows.append(row)
+
+        document.getElementById("tableHost").innerHTML = (
+            '<table class="result-table"><thead><tr>' + "".join(f"<th>{h}</th>" for h in out_header) + "</tr></thead><tbody>"
+            + table_rows + "</tbody></table>"
         )
-        status.className = "status"
-        status.innerText = f"Normalized from Q{q:.0f} F{f:.0f} L{l:.0f} (sum {total:.0f}) to 100%."
-    except Exception as e:
-        status.className = "status err"
-        status.innerText = f"Check your inputs — {e}"
+        document.getElementById("csvBtn").setAttribute("href", "data:text/csv;base64," + csv_b64(out_header, csv_rows))
+        table_panel.style.display = "block"
 
-plot(None)
+        if use_paleo:
+            b64_paleo = plot_paleoclimate(sections)
+            paleo_wrap.innerHTML = f'''
+              <div class="plot-card" style="max-width:640px; margin:0 auto 24px;">
+                <h4>Paleoclimate Interpretation (Suttner &amp; Dutta, 1986)</h4>
+                <img src="data:image/png;base64,{b64_paleo}">
+                <a class="dl-btn" href="data:image/png;base64,{b64_paleo}" download="paleoclimate_suttner_dutta.png">Download PNG</a>
+              </div>
+            '''
+
+        n_total = sum(len(s["pctQ"]) for s in sections)
+        set_status(f"Plotted {n_total} sample(s) across {len(sections)} section(s).")
+    except Exception as e:
+        set_status(f"Check your data — {e}", is_err=True)
 </script>
 
 </body>
