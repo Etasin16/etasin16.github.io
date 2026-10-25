@@ -327,7 +327,7 @@ LX, LY = 1.0, 0.0
 def bary(q, f, l):
     return q*QX + f*FX + l*LX, q*QY + f*FY + l*LY
 
-def draw_ternary_frame(ax, labels=("Quartz", "Feldspar", "Lithics")):
+def draw_ternary_frame(ax, labels=("Q", "F", "L")):
     ax.plot([QX, FX, LX, QX], [QY, FY, LY, QY], color="#2A2622", linewidth=1.3, zorder=3)
 
     for c in [0.2, 0.4, 0.6, 0.8]:
