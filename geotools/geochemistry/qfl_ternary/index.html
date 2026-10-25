@@ -350,7 +350,7 @@ def draw_ternary_frame(ax, labels=("Q", "F", "L")):
         p = bary(1-c, c, 0)
         ax.text(p[0]-0.03, p[1], f"{val}", ha="right", va="center", fontsize=7, color="#9A948B")
         p = bary(1-c, 0, c)
-        ax.text(p[0]+0.03, p[1], f"{val}", ha="left", va="center", fontsize=7, color="#9A948B")
+        ax.text(p[0]+0.03, p[1], f"{100-val}", ha="left", va="center", fontsize=7, color="#9A948B")
 
     ax.set_xlim(-0.28, 1.28); ax.set_ylim(-0.16, 1.05)
     ax.set_aspect("equal"); ax.axis("off")
@@ -372,7 +372,7 @@ def plot_basic_ternary(sections):
             x, y = bary(q/100, f/100, l/100)
             xs.append(x); ys.append(y)
         # smaller sample markers
-        ax.scatter(xs, ys, s=16, marker=sec["marker"], color=sec["color"],
+        ax.scatter(xs, ys, s=10, marker=sec["marker"], color=sec["color"],
                    edgecolor="#1A1816", linewidth=0.6, zorder=5, label=sec["name"])
     ax.legend(fontsize="small", loc="upper right", frameon=False)
     return fig_to_b64(fig)
